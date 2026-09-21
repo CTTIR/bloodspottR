@@ -1,0 +1,8 @@
+^\.project$
+^\.git$
+^\.gitignore$
+^\.Rbuildignore$
+^\.Rproj\.user$
+^LICENSE\.md$
+^bloodspottR.*\.tar\.gz$
+^bloodspottR\.Rcheck$

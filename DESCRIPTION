@@ -1,0 +1,21 @@
+Package: bloodspottR
+Title: Calibrated Histology Burden and Erythrocyte Profile Analysis
+Version: 0.1.0.9000
+Authors@R: person("R.", "Heller", email = "58561665+r-heller@users.noreply.github.com", role = c("aut", "cre"))
+Description: Tools for physically calibrated histology burden summaries,
+    explicit measurement-area accounting, and tissue-aware spatial analysis.
+    Supports reproducible development of red-chromogen and erythrocyte-profile
+    workflows. Image-derived candidates require independent validation before
+    biological interpretation.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends: R (>= 4.2.0)
+Imports: digest, jsonlite
+Suggests: testthat (>= 3.0.0), sf, spatstat.geom, shiny, processx, ps,
+    openxlsx2, cellspecR, knitr, rmarkdown, covr
+VignetteBuilder: knitr
+Roxygen: list(markdown = TRUE)
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
+URL: https://github.com/CTTIR/bloodspottR
+BugReports: https://github.com/CTTIR/bloodspottR/issues

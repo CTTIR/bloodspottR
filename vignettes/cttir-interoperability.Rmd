@@ -1,0 +1,105 @@
+---
+title: "Scoped interoperability across the CTTIR suite"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Scoped interoperability across the CTTIR suite}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(bloodspottR)
+```
+
+## Reuse without hidden execution
+
+bloodspottR owns the histology workflow, calibrated burden summaries and event
+semantics. Packages elsewhere in the suite own their respective image, annotation,
+segmentation, spatial, cell-data or reporting facilities. A source inventory records available package identities and exports. Presence
+in that inventory is not a promise that every package has been installed,
+invoked or qualified end to end.
+
+The inventory reads immediate child package metadata and literal namespace
+exports. It does not load packages, execute their source, install dependencies or
+start services. Directory names and declared package names can differ; duplicate
+identities remain visible rather than silently overwriting one another.
+
+```{r inventory-example}
+suite <- tempfile("cttir-inventory-example-")
+dir.create(suite)
+dir.create(file.path(suite, "example-source"))
+writeLines(c("Package: exampleTool", "Version: 0.1.0", "Title: Metadata Fixture"),
+           file.path(suite, "example-source", "DESCRIPTION"))
+writeLines("export(example_function)",
+           file.path(suite, "example-source", "NAMESPACE"))
+inventory <- bs_cttir_inventory(suite)
+inventory[, c("directory", "package", "version", "exports", "status")]
+stopifnot(inventory$status == "metadata_only")
+unlink(suite, recursive = TRUE)
+```
+
+On a workstation, inventory an explicitly chosen suite root:
+
+```{r local-suite, eval=FALSE}
+inventory <- bs_cttir_inventory("/path/to/CTTIR/public", check_installed = TRUE)
+inventory[inventory$duplicate_package, ]
+```
+
+An installed version may differ from source. Before a production adapter call,
+record the exact version, input units, identity mapping and runtime verification.
+Source inspection cannot substitute for exercising native clients and optional
+backends with representative inputs.
+
+## Calibrated event exchange with cellspecR
+
+The implemented `bs_as_cellspec()` adapter exchanges candidate centres and image
+metadata. A physical slide becomes `sample_id`; no animal or treatment assignment
+is inferred. `event_id` becomes `cell_id` for schema compatibility while
+`object_type = "event_candidate"` and provenance preserve its actual meaning.
+It supplies neither invented cell boundaries nor intensity measurements.
+
+```{r calibrated-events}
+images <- data.frame(
+  image_id = "image-001", physical_slide_id = "slide-001",
+  pixel_width_um = 0.25, pixel_height_um = 0.5,
+  width_px = 200L, height_px = 100L
+)
+events <- data.frame(
+  event_id = c("candidate-001", "candidate-002"),
+  image_id = "image-001", physical_slide_id = "slide-001",
+  x_um = c(5, 20), y_um = c(10, 30),
+  event_type = c("single_compatible", "unresolved_bulk")
+)
+```
+
+Coordinates already refer to the declared image frame in micrometres. Pixel
+coordinates divide each axis by its own calibration: anisotropic sampling is
+not forced into a square-pixel assumption. Centres must lie inside half-open
+image extents, image/slide identities must agree, and identifiers remain strings.
+
+```{r cellspec-optional}
+if (requireNamespace("cellspecR", quietly = TRUE)) {
+  exchanged <- bs_as_cellspec(events, images,
+                              provenance = list(source = "synthetic example"))
+  stopifnot(!is.null(exchanged))
+}
+```
+
+This adapter does not perform spatial registration. A crop or tile first needs a
+verified transform into the declared frame. Repeat acquisitions of one physical
+area do not create additional biological area. Data interchange preserves these
+semantics; it cannot establish geometric independence or count accuracy.
+
+## Compatibility boundaries
+
+Generic JSON/CSV result exports carry summaries and provenance without requiring
+the image toolchain. Other scope-appropriate adapters can build on explicit
+contracts: segmentation products need calibrated masks; annotation exchange
+needs parent-coordinate identity and class-specific review scope; spatial
+analyses need observed tissue support rather than image-canvas area.
+
+An unavailable optional dependency should produce an actionable error. It must
+not silently replace a trained model, fabricate a zero, infer missing control
+labels or re-run an old study. Scope extensions belong in the package that owns
+the corresponding data contract and require focused round-trip tests there.

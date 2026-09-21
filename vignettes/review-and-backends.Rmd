@@ -1,0 +1,116 @@
+---
+title: "Saved reviews and reproducible external workers"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Saved reviews and reproducible external workers}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(bloodspottR)
+```
+
+## Freeze the review pool
+
+A review queue binds each image to its parent and SHA-256 checksum. Its default
+budget is 50 images. Sampling is reproducible and preserves the caller's random
+state. The caller must define the sampling pool and explain how it was obtained;
+a bounded queue does not establish that examples represent all slides.
+
+```{r queue}
+work <- tempfile("review-example-")
+dir.create(work)
+image <- file.path(work, "field.png")
+grDevices::png(image, width = 200, height = 200)
+par(mar = rep(0, 4))
+plot.new()
+text(.5, .5, "Synthetic empty field")
+grDevices::dev.off()
+queue <- bs_review_plan(
+  data.frame(item_id = "field-1", parent_id = "slide-1", path = image),
+  budget = 50, seed = 41, out = file.path(work, "review")
+)
+queue$items[c("item_id", "parent_id", "selection")]
+```
+
+## Save in the annotation client, then confirm
+
+The package does not automate a running QuPath window. Save in the client and
+export a CSV with `class`, `x`, and `y` in the parent image's pixel frame before
+confirmation. Crop offsets and transforms belong to the client adapter; this
+ledger cannot recover them from points. Supported classes are `Spot_center`,
+`Missed_spot`, `False_positive`, `Review_uncertain`, `Missed_area`,
+`False_positive_area`, `Cell_nucleus`, and `Vessel_structure`.
+
+A point identifies a location, not an area boundary. Exemplary nucleus points do
+not label unmarked nuclei as absent. Vessel-wall points are not lumen masks.
+Review scope is recorded separately for erythrocytes, nuclei, and vessels.
+A header-only file becomes an explicit negative review only with an `absent`
+assertion; it is never silently treated as a negative training example.
+
+```{r confirm}
+annotation <- file.path(work, "saved-points.csv")
+utils::write.csv(data.frame(class = character(), x = numeric(), y = numeric()),
+                 annotation, row.names = FALSE)
+receipt <- bs_review_confirm(queue, "field-1", annotation,
+  assertions = list(ery = "absent", nuclei = "unreviewed", vessel = "unreviewed"))
+file.exists(file.path(queue$path, "receipts"))
+```
+
+Confirmations must follow queue order. Repeating an identical confirmation is
+idempotent; changed source images, changed archived annotations, contradictory
+scopes, or competing writers are rejected. Receipts are durable saved-export
+records, not proof that a reader examined every object.
+
+## External worker protocol
+
+`bs_backend()` configures an explicitly trusted executable. `bs_train()` and
+`bs_analyze()` run that executable through `processx`; they do not contain a
+bundled DNN architecture or silently install Python. The worker receives two
+final arguments: a JSON request path and an empty staging directory. The request
+records operation, backend version, named input paths and hashes, and parameters.
+A successful worker writes `result.json` with this structure:
+
+```json
+{"schema_version":1,"status":"complete","artifacts":["measurements.csv"]}
+```
+
+Artifacts must be regular files beneath the staging directory. Absolute paths,
+traversal, symbolic links, duplicate aliases and reserved receipt names are
+rejected. Input checksums are verified after execution. Successful output gets a
+receipt containing the exact request, settings and request hash and is published
+to a new destination. Failed or timed-out jobs do not
+publish a result directory. The executable is trusted code: the subprocess
+protocol is not a security sandbox or a rollback mechanism for worker side effects.
+
+```{r worker, eval=requireNamespace("processx", quietly=TRUE)}
+worker <- file.path(work, "worker.R")
+writeLines(c(
+  'args <- commandArgs(TRUE)',
+  'request <- jsonlite::read_json(args[1])',
+  'writeLines("synthetic fixture", file.path(args[2], "fixture.txt"))',
+  'jsonlite::write_json(list(schema_version=1, status="complete",',
+  '  artifacts=list("fixture.txt")), file.path(args[2], "result.json"),',
+  '  auto_unbox=TRUE)'
+), worker)
+backend <- bs_backend(file.path(R.home("bin"), "Rscript"), args = worker,
+                      version = "synthetic-protocol-example-v1")
+job <- bs_analyze(c(image = image), backend, out = file.path(work, "job"))
+job$status
+```
+
+This fixture tests transport and publication only. A scientific worker must also
+record model and code identity, calibration, training/test split, valid support,
+normalization branch, thresholds, and independent validation. Partition by the
+physical source slide before generating training crops to avoid leakage. Sparse
+points need an explicit supervision mask; unlabeled pixels are not negatives.
+
+Native QuPath save/export integration, portable DNN training and whole-slide
+inference remain separate qualification work. The preserved study scripts and
+models are not silently embedded as universal defaults in this package.
+
+```{r cleanup, include=FALSE}
+unlink(work, recursive = TRUE)
+```

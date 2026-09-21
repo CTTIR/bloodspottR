@@ -1,0 +1,155 @@
+---
+title: "From slide measurements to a traceable report"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{From slide measurements to a traceable report}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(bloodspottR)
+```
+
+## Scope and measurement meaning
+
+This workflow starts with physical-slide measurements. It does not read native
+whole slides, train a DNN or validate a candidate as one erythrocyte. The reusable
+package preserves distinctions needed for those later stages: measured red area,
+spot candidates, unresolved bulk events, explicit support and provenance.
+Software validation checks contracts and arithmetic, not biological accuracy.
+
+The examples use deterministic **synthetic** data. One record is deliberately
+missing signal measurements and another has zero measured tissue support.
+
+```{r example}
+results <- bs_example()
+bs_validate(results)
+results$slides[, c("physical_slide_id", "organ", "tissue_area_mm2",
+                   "red_area_mm2", "candidate_spots")]
+```
+
+Canonical tables identify physical slides with nonempty character strings, areas
+in square millimetres and nonnegative whole-valued counts. The operational count
+is candidate spots plus unresolved bulk events. Counts use numeric storage and
+must remain exactly representable within the documented double-precision bound.
+Existing QC/organ labels are metadata, never inferred from signal strength.
+
+## Pool numerators and support
+
+A group's red-positive fraction is
+`100 * sum(red_area_mm2) / sum(tissue_area_mm2)`.
+Its candidate density uses the same tissue denominator. Pooled rates are not
+means of slide rates: a small and a large slide contribute different support.
+
+```{r pooled}
+by_organ <- bs_summarize(results, strata = "organ")
+by_organ[, c("organ", "n_slides", "tissue_area_mm2", "red_area_mm2",
+             "red_percent", "spots_per_mm2")]
+stopifnot(is.na(by_organ$red_percent[by_organ$organ == "Spleen"]))
+```
+
+The spleen summary is missing because one contributing measurement is missing.
+It would be misleading to silently sum only its known values while retaining the
+full tissue denominator. A true zero numerator on positive support is zero;
+zero or unknown support gives a missing rate. Excluding incomplete or compromised
+slides requires a declared analysis decision and a retained membership record.
+
+Group jointly by tissue and the supplied quality strata:
+
+```{r strata}
+results$groups <- bs_summarize(results, strata = c("organ", "stratum"))
+results$groups[, c("organ", "stratum", "n_slides", "red_percent")]
+```
+
+Only observed combinations appear. `slide_ids` retains membership. A
+`qc_revision` can replace metadata when it uniquely covers every measured slide;
+it cannot replace numerical measurements. Historical study-specific thresholds
+and exclusion decisions are not imposed by this package.
+
+## Import a preserved measurement table
+
+The legacy importer accepts a canonical CSV or a saved `analysis.json` with a
+`rows` table. The `p079` profile also maps `tissue_mm2` and `red_mm2`; it does not
+assign controls or invent missing calibration. Source file identity is hashed.
+
+```{r import}
+source_file <- tempfile(fileext = ".csv")
+utils::write.csv(results$slides, source_file, row.names = FALSE, na = "")
+imported <- bs_import_legacy(source_file, profile = "canonical")
+stopifnot(identical(imported$slides$physical_slide_id,
+                    results$slides$physical_slide_id))
+bs_status(imported)
+unlink(source_file)
+```
+
+The source hash is an integrity receipt, not proof of authentic acquisition or
+independent biological validation. Canonical result JSON exported by the package
+contains a schema-versioned `slides` table for portable exchange. The importer
+accepts that format as well as the historical `rows` format.
+
+## Compare runs on declared common support
+
+Equal slide IDs alone do not prove equal measurement support. Here both runs
+explicitly reference the same synthetic support identity, so paired changes can
+be computed. Without matching support, `support = "common"` fails; the union
+view preserves unmatched records with unverifiable differences missing.
+
+```{r compare}
+first <- results
+second <- results
+first$slides$support_id <- paste0("synthetic-support-", first$slides$physical_slide_id)
+second$slides$support_id <- first$slides$support_id
+second$slides$red_area_mm2[2] <- 0.25
+comparison <- bs_compare(list(baseline = first, comparison = second))
+comparison[, c("physical_slide_id", "support_verified", "red_area_mm2_delta")]
+results$comparison <- comparison
+```
+
+## Preserve a report and tables
+
+Each delivery uses a new destination directory. Existing deliveries are never
+overwritten; the parent directory must exist. HTML text is escaped, exports keep
+missing values, and a SHA-256 manifest records generated files.
+
+```{r report}
+delivery <- tempfile("bloodspottr-example-report-")
+report <- bs_report(results, delivery, author = "RH",
+                    background = "Synthetic demonstration; no biological inference.")
+list.files(delivery)
+stopifnot(file.exists(report), file.exists(file.path(delivery, "SHA256SUMS")))
+```
+
+`bs_export_results(results, out)` writes tables without HTML. Set `xlsx = TRUE`
+for optional **openxlsx2** workbook output. The initial renderer does not embed
+raw image masks, native detail crops, training weights or individual events; the
+study-specific TeX/PDF supplement is a separate artifact.
+
+```{r optional-xlsx}
+if (requireNamespace("openxlsx2", quietly = TRUE)) {
+  workbook_delivery <- tempfile("bloodspottr-example-xlsx-")
+  bs_export_results(results, workbook_delivery, xlsx = TRUE)
+  stopifnot(file.exists(file.path(workbook_delivery, "results.xlsx")))
+  unlink(workbook_delivery, recursive = TRUE)
+}
+```
+
+## Explore with Shiny
+
+```{r shiny, eval=FALSE}
+bs_app(results)                  # Local interactive session
+app <- bs_app(launch = FALSE)    # Empty application object; explicit demo button
+```
+
+The application filters by tissue, recorded QC stratum and literal slide ID.
+Pooled cards and plots follow the selected rows; the source object is unchanged.
+It exposes exact measurements, supplied comparisons, provenance and filtered CSV
+exports. Its explicit demonstration label prevents synthetic values from being
+mistaken for a loaded study. Browser uploads accept CSV/JSON, not executable
+serialized objects. It does not launch a GPU backend or claim native annotation
+editing or model training controls.
+
+```{r cleanup, include=FALSE}
+unlink(delivery, recursive = TRUE)
+```
