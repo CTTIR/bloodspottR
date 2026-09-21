@@ -40,7 +40,9 @@ tissue_window <- function(polygons, coordinate_unit = c("um", "mm")) {
       rings[[length(rings) + 1L]] <- list(x = coordinates[, 1], y = coordinates[, 2])
     }
   }
-  window <- spatstat.geom::owin(poly = rings)
+  # sf already validated and unioned these rings; a second clipping pass can
+  # shift boundary coordinates through platform-dependent integer rounding.
+  window <- spatstat.geom::owin(poly = rings, fix = FALSE)
   spatstat.geom::unitname(window) <- c("micrometre", "micrometres")
   attr(window, "bloodspottR_coordinate_unit") <- "um"
   expected <- as.numeric(sf::st_area(united)) * multiplier^2

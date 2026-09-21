@@ -10,7 +10,7 @@ export_fixture <- function() {
 
 test_that("export preserves canonical data and escapes presentation strings", {
   x <- export_fixture(); p <- tempfile(); on.exit(unlink(p, recursive = TRUE))
-  expect_equal(bs_export_results(x, p), normalizePath(p))
+  expect_equal(bs_export_results(x, p), normalizePath(p, winslash = "/"))
   expect_true(all(c("Slides.csv", "Groups.csv", "Methods.csv", "results.json", "SHA256SUMS") %in% list.files(p)))
   z <- bs_import_legacy(p)
   expect_equal(z$slides$note, x$slides$note)

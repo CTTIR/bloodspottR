@@ -31,7 +31,7 @@ test_that("image manifests resolve relative paths without trusting uploaded resu
   d <- data.frame(image_id = "i", slide_id = "001", path = "preview.png")
   path <- file.path(root, "images.csv"); write.csv(d, path, row.names = FALSE)
   m <- .bs_image_manifest(path, "001")
-  expect_equal(m$path, normalizePath(image))
+  expect_equal(m$path, normalizePath(image, winslash = "/"))
   expect_equal(m$label, "i")
   expect_equal(nrow(.bs_image_manifest(NULL, "001")), 0)
   expect_error(.bs_image_manifest(data.frame(), "001"), "needs")

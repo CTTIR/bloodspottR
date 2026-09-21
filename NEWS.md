@@ -1,5 +1,7 @@
 # bloodspottR 0.1.0.9000
 
+- Preserve exact tissue boundaries across platforms and distinguish exported table names during folder imports.
+
 * Re-audit: exact count parsing and identity checks in Shiny, unambiguous filters,
   preserved comparison exports, and catchable `bloodspottr_error` conditions.
 * Added preview/native whole-slide browsing, QuPath GeoJSON and point-CSV

@@ -101,8 +101,9 @@ bs_import_legacy <- function(path, profile = "p079") {
   .bs_scalar_string(path, "path")
   profile <- match.arg(profile, c("p079", "canonical"))
   if (dir.exists(path)) {
-    candidates <- file.path(path, c("analysis.json", "results.json", "slides.csv", "results.csv"))
-    candidates <- candidates[file.exists(candidates)]
+    # Match actual names so exported Slides.csv is distinct from legacy slides.csv.
+    candidates <- file.path(path, intersect(list.files(path),
+      c("analysis.json", "results.json", "slides.csv", "results.csv")))
     if (length(candidates) != 1L) .bs_abort("Folder must contain exactly one result source; supply a file", call. = FALSE)
     path <- candidates
   }
