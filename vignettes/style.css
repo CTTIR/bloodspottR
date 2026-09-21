@@ -1,0 +1,13 @@
+body { box-sizing: border-box; width: 100%; max-width: 840px; margin: 0 auto; padding: 24px; font: 16px/1.6 system-ui, sans-serif; color: #173042; }
+#TOC { box-sizing: border-box; width: 100%; max-width: 100%; padding: 12px 20px; background: #f4f7fa; border: 1px solid #dce5e9; }
+h1, h2, h3 { line-height: 1.25; overflow-wrap: anywhere; }
+h1 { color: #185fa5; }
+a { color: #075b89; }
+pre { box-sizing: border-box; max-width: 100%; overflow-x: auto; white-space: pre; word-wrap: normal; padding: 14px; }
+code { font-size: .88em; }
+p code, li code { overflow-wrap: anywhere; }
+table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+th, td { padding: 8px 12px; }
+img { max-width: 100%; height: auto; }
+@media (max-width: 600px) { body { padding: 16px; } h1 { font-size: 1.8em; } #TOC ul { padding-left: 20px; } }
+p code, li code, td code { white-space: normal; }

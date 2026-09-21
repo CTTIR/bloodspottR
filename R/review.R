@@ -13,22 +13,22 @@
 bs_review_plan <- function(images, budget = 50L, seed = 1L, out) {
   required <- c("item_id", "parent_id", "path")
   if (!is.data.frame(images) || anyDuplicated(names(images)) || !all(required %in% names(images)) || !nrow(images))
-    stop("images needs item_id, parent_id and path rows", call. = FALSE)
+    .bs_abort("images needs item_id, parent_id and path rows", call. = FALSE)
   for (name in required) {
     images[[name]] <- as.character(images[[name]])
     if (anyNA(images[[name]]) || any(!nzchar(trimws(images[[name]]))))
-      stop("Image identifiers and paths cannot be missing", call. = FALSE)
+      .bs_abort("Image identifiers and paths cannot be missing", call. = FALSE)
   }
-  if (anyDuplicated(images$item_id)) stop("item_id must be unique", call. = FALSE)
+  if (anyDuplicated(images$item_id)) .bs_abort("item_id must be unique", call. = FALSE)
   for (value in list(budget, seed))
     if (!is.numeric(value) || length(value) != 1L || !is.finite(value) ||
         value < 0 || value != floor(value) || value > .Machine$integer.max)
-      stop("budget and seed must be nonnegative integers", call. = FALSE)
-  if (budget < 1) stop("budget must be positive", call. = FALSE)
+      .bs_abort("budget and seed must be nonnegative integers", call. = FALSE)
+  if (budget < 1) .bs_abort("budget must be positive", call. = FALSE)
   if (any(!file.exists(images$path)) || any(dir.exists(images$path)))
-    stop("Image paths must be existing files", call. = FALSE)
+    .bs_abort("Image paths must be existing files", call. = FALSE)
   if (!is.character(out) || length(out) != 1L || is.na(out) || !nzchar(out) ||
-      file.exists(out) || !dir.exists(dirname(out))) stop("out must be a new directory path", call. = FALSE)
+      file.exists(out) || !dir.exists(dirname(out))) .bs_abort("out must be a new directory path", call. = FALSE)
   had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
   if (had_seed) old_seed <- get(".Random.seed", envir = .GlobalEnv)
   on.exit(if (had_seed) assign(".Random.seed", old_seed, envir = .GlobalEnv) else
@@ -44,7 +44,7 @@ bs_review_plan <- function(images, budget = 50L, seed = 1L, out) {
   jsonlite::write_json(list(schema_version = 1L, seed = seed, budget = budget, items = selected),
                        file.path(stage, "plan.json"), pretty = TRUE, auto_unbox = TRUE, dataframe = "rows")
   dir.create(file.path(stage, "receipts"))
-  if (!file.rename(stage, out)) stop("Could not commit review plan", call. = FALSE)
+  if (!file.rename(stage, out)) .bs_abort("Could not commit review plan", call. = FALSE)
   structure(list(path = normalizePath(out, winslash = "/"), items = selected), class = "bs_review_plan")
 }
 
@@ -64,48 +64,48 @@ bs_review_plan <- function(images, budget = 50L, seed = 1L, out) {
 bs_review_confirm <- function(plan, item_id, annotations, assertions) {
   if (!inherits(plan, "bs_review_plan") || !is.list(plan) || !is.character(plan$path) ||
       length(plan$path) != 1L || is.na(plan$path) || !dir.exists(plan$path))
-    stop("Expected an existing review plan", call. = FALSE)
+    .bs_abort("Expected an existing review plan", call. = FALSE)
   path <- plan$path
   lock <- file.path(path, ".writer-lock")
-  if (!dir.create(lock, showWarnings = FALSE)) stop("Review has another writer", call. = FALSE)
+  if (!dir.create(lock, showWarnings = FALSE)) .bs_abort("Review has another writer", call. = FALSE)
   on.exit(unlink(lock, recursive = TRUE), add = TRUE)
   stored <- jsonlite::read_json(file.path(path, "plan.json"), simplifyVector = TRUE)
   if (!isTRUE(stored$schema_version == 1L) || !is.data.frame(stored$items))
-    stop("Invalid review manifest", call. = FALSE)
+    .bs_abort("Invalid review manifest", call. = FALSE)
   items <- stored$items
   required <- c("item_id", "parent_id", "path", "sha256")
   if (!all(required %in% names(items)) || !nrow(items) || anyDuplicated(items$item_id) ||
       any(!vapply(items[required], function(x) is.character(x) && !anyNA(x) && all(nzchar(x)), logical(1))) ||
-      !dir.exists(file.path(path, "receipts"))) stop("Invalid review manifest", call. = FALSE)
+      !dir.exists(file.path(path, "receipts"))) .bs_abort("Invalid review manifest", call. = FALSE)
   if (!is.character(item_id) || length(item_id) != 1L || is.na(item_id) || !item_id %in% items$item_id)
-    stop("Unknown review item", call. = FALSE)
+    .bs_abort("Unknown review item", call. = FALSE)
   allowed <- c("unreviewed", "partial", "complete", "absent")
   if (!is.list(assertions) || !setequal(names(assertions), c("ery", "nuclei", "vessel")) ||
       length(assertions) != 3L || any(!vapply(assertions, function(x)
         is.character(x) && length(x) == 1L && !is.na(x) && x %in% allowed, logical(1))) ||
-      all(unlist(assertions) == "unreviewed")) stop("Explicit class-specific review assertions required", call. = FALSE)
+      all(unlist(assertions) == "unreviewed")) .bs_abort("Explicit class-specific review assertions required", call. = FALSE)
   assertions <- assertions[c("ery", "nuclei", "vessel")]
   if (!is.character(annotations) || length(annotations) != 1L || is.na(annotations) ||
-      !file.exists(annotations) || dir.exists(annotations)) stop("Saved annotation CSV required", call. = FALSE)
+      !file.exists(annotations) || dir.exists(annotations)) .bs_abort("Saved annotation CSV required", call. = FALSE)
   before <- digest::digest(file = annotations, algo = "sha256")
   points <- utils::read.csv(annotations, stringsAsFactors = FALSE, check.names = FALSE)
   classes <- c("Spot_center", "Missed_spot", "False_positive", "Review_uncertain", "Missed_area", "False_positive_area", "Cell_nucleus", "Vessel_structure")
   if (anyDuplicated(names(points)) || !all(c("class", "x", "y") %in% names(points)) || anyNA(points$class) || any(!points$class %in% classes) ||
       !is.numeric(points$x) && nrow(points) > 0L || !is.numeric(points$y) && nrow(points) > 0L)
-    stop("Invalid annotation columns or classes", call. = FALSE)
+    .bs_abort("Invalid annotation columns or classes", call. = FALSE)
   if (nrow(points) && any(!is.finite(points$x) | !is.finite(points$y) | points$x < 0 | points$y < 0))
-    stop("Annotation coordinates must be finite and nonnegative", call. = FALSE)
+    .bs_abort("Annotation coordinates must be finite and nonnegative", call. = FALSE)
   targets <- list(ery = c("Spot_center", "Missed_spot", "Missed_area", "Review_uncertain"), nuclei = "Cell_nucleus", vessel = "Vessel_structure")
   for (target in names(targets)) {
     associated <- if (target == "ery") c(targets[[target]], "False_positive", "False_positive_area") else targets[[target]]
     if (assertions[[target]] == "unreviewed" && any(points$class %in% associated))
-      stop("Unreviewed assertion conflicts with supplied points", call. = FALSE)
+      .bs_abort("Unreviewed assertion conflicts with supplied points", call. = FALSE)
     if (assertions[[target]] == "absent" && any(points$class %in% targets[[target]]))
-      stop("Absence assertion conflicts with positive or uncertain points", call. = FALSE)
+      .bs_abort("Absence assertion conflicts with positive or uncertain points", call. = FALSE)
   }
   index <- match(item_id, items$item_id)
   if (!file.exists(items$path[index]) || digest::digest(file = items$path[index], algo = "sha256") != items$sha256[index])
-    stop("Review image changed", call. = FALSE)
+    .bs_abort("Review image changed", call. = FALSE)
   receipt_path <- file.path(path, "receipts", sprintf("%06d.json", index))
   archive <- file.path(path, "receipts", sprintf("%06d.csv", index))
   if (file.exists(receipt_path)) {
@@ -114,9 +114,9 @@ bs_review_confirm <- function(plan, item_id, annotations, assertions) {
         !identical(receipt$image_sha256, items$sha256[index]) || !file.exists(archive) ||
         !identical(digest::digest(file = archive, algo = "sha256"), before) ||
         !identical(receipt$annotation_sha256, before) || !identical(receipt$assertions, assertions))
-      stop("Completed item differs; create a new review revision", call. = FALSE)
+      .bs_abort("Completed item differs; create a new review revision", call. = FALSE)
     if (!identical(digest::digest(file = annotations, algo = "sha256"), before))
-      stop("Annotations changed during readback", call. = FALSE)
+      .bs_abort("Annotations changed during readback", call. = FALSE)
     return(invisible(receipt))
   }
   complete <- file.exists(file.path(path, "receipts", sprintf("%06d.json", seq_len(nrow(items)))))
@@ -126,15 +126,15 @@ bs_review_confirm <- function(plan, item_id, annotations, assertions) {
     if (!identical(prior$status, "complete") || !identical(prior$item_id, items$item_id[done]) ||
         !identical(prior$image_sha256, items$sha256[done]) || !file.exists(prior_csv) ||
         dir.exists(prior_csv) || !identical(prior$annotation_sha256, digest::digest(file = prior_csv, algo = "sha256")))
-      stop("Earlier review receipt or archive is invalid", call. = FALSE)
+      .bs_abort("Earlier review receipt or archive is invalid", call. = FALSE)
   }
-  if (index != which(!complete)[1L]) stop("Confirm the next incomplete item first", call. = FALSE)
+  if (index != which(!complete)[1L]) .bs_abort("Confirm the next incomplete item first", call. = FALSE)
   if (file.exists(archive)) {
     if (dir.exists(archive) || !identical(digest::digest(file = archive, algo = "sha256"), before))
-      stop("Uncommitted annotation archive differs; preserve it and create a new revision", call. = FALSE)
-  } else if (!file.copy(annotations, archive, overwrite = FALSE)) stop("Could not archive annotations", call. = FALSE)
+      .bs_abort("Uncommitted annotation archive differs; preserve it and create a new revision", call. = FALSE)
+  } else if (!file.copy(annotations, archive, overwrite = FALSE)) .bs_abort("Could not archive annotations", call. = FALSE)
   if (before != digest::digest(file = archive, algo = "sha256") || before != digest::digest(file = annotations, algo = "sha256")) {
-    unlink(archive); stop("Annotations changed during readback", call. = FALSE)
+    unlink(archive); .bs_abort("Annotations changed during readback", call. = FALSE)
   }
   receipt <- list(schema_version = 1L, item_id = item_id, parent_id = items$parent_id[index],
     image_sha256 = items$sha256[index], annotation_sha256 = before, n_points = nrow(points),
@@ -143,6 +143,6 @@ bs_review_confirm <- function(plan, item_id, annotations, assertions) {
   temporary <- tempfile(".receipt-", tmpdir = file.path(path, "receipts"))
   on.exit(unlink(temporary), add = TRUE)
   jsonlite::write_json(receipt, temporary, auto_unbox = TRUE, pretty = TRUE)
-  if (!file.rename(temporary, receipt_path)) stop("Could not commit receipt", call. = FALSE)
+  if (!file.rename(temporary, receipt_path)) .bs_abort("Could not commit receipt", call. = FALSE)
   invisible(receipt)
 }

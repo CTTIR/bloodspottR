@@ -12,19 +12,20 @@
 bs_export_results <- function(results, out, xlsx = FALSE) {
   .bs_export_check(results, out)
   if (!is.logical(xlsx) || length(xlsx) != 1L || is.na(xlsx))
-    stop("xlsx must be TRUE or FALSE", call. = FALSE)
+    .bs_abort("xlsx must be TRUE or FALSE", call. = FALSE)
   if (xlsx && !requireNamespace("openxlsx2", quietly = TRUE))
-    stop("Excel export requires openxlsx2", call. = FALSE)
+    .bs_abort("Excel export requires openxlsx2", call. = FALSE)
   tables <- list(Slides = results$slides)
   if (is.data.frame(results$groups)) tables$Groups <- results$groups
+  if (is.data.frame(results$comparison)) tables$Comparison <- results$comparison
   tables <- lapply(tables, .bs_flat_table)
   tables$Methods <- data.frame(item = c("Status", "Units", "Scope"),
     value = c("Exploratory image-derived candidates", "Areas: mm2; densities: per mm2",
               "Slide summaries; raw images and individual annotations are separate artifacts"))
   parent <- dirname(out)
-  if (!dir.exists(parent)) stop("Parent directory does not exist", call. = FALSE)
+  if (!dir.exists(parent)) .bs_abort("Parent directory does not exist", call. = FALSE)
   stage <- tempfile(".bloodspottr-export-", tmpdir = parent)
-  if (!dir.create(stage)) stop("Could not create export staging directory", call. = FALSE)
+  if (!dir.create(stage)) .bs_abort("Could not create export staging directory", call. = FALSE)
   on.exit(unlink(stage, recursive = TRUE), add = TRUE)
   for (name in names(tables)) {
     safe <- tables[[name]]
@@ -47,17 +48,17 @@ bs_export_results <- function(results, out, xlsx = FALSE) {
     workbook$save(file.path(stage, "results.xlsx"))
   }
   .bs_manifest(stage)
-  if (file.exists(out) || !file.rename(stage, out)) stop("Could not commit export directory", call. = FALSE)
+  if (file.exists(out) || !file.rename(stage, out)) .bs_abort("Could not commit export directory", call. = FALSE)
   invisible(normalizePath(out, winslash = "/", mustWork = TRUE))
 }
 
 .bs_export_check <- function(results, out) {
   if (!inherits(results, "bs_result") || !is.data.frame(results$slides))
-    stop("results must be a bs_result", call. = FALSE)
+    .bs_abort("results must be a bs_result", call. = FALSE)
   bs_validate(results)
   if (!is.character(out) || length(out) != 1L || is.na(out) || !nzchar(out))
-    stop("out must be one nonempty path", call. = FALSE)
-  if (file.exists(out) || dir.exists(out)) stop("Output already exists", call. = FALSE)
+    .bs_abort("out must be one nonempty path", call. = FALSE)
+  if (file.exists(out) || dir.exists(out)) .bs_abort("Output already exists", call. = FALSE)
 }
 
 .bs_manifest <- function(path) {
@@ -106,10 +107,10 @@ bs_report <- function(results, out, title = "Histology burden report",
                        author = "", background = "", xlsx = FALSE) {
   for (x in list(title, author, background))
     if (!is.character(x) || length(x) != 1L || is.na(x))
-      stop("Report text must be scalar character values", call. = FALSE)
+      .bs_abort("Report text must be scalar character values", call. = FALSE)
   .bs_export_check(results, out)
   parent <- dirname(out)
-  if (!dir.exists(parent)) stop("Parent directory does not exist", call. = FALSE)
+  if (!dir.exists(parent)) .bs_abort("Parent directory does not exist", call. = FALSE)
   # The final destination appears only after every report artifact succeeds.
   stage <- tempfile(".bloodspottr-report-", tmpdir = parent)
   on.exit(unlink(stage, recursive = TRUE), add = TRUE)
@@ -117,11 +118,13 @@ bs_report <- function(results, out, title = "Histology burden report",
   provenance <- jsonlite::toJSON(results$provenance, auto_unbox = TRUE, pretty = TRUE,
                                null = "null", na = "null")
   groups <- if (is.data.frame(results$groups)) results$groups else data.frame()
+  comparison <- if (is.data.frame(results$comparison)) results$comparison else data.frame()
   html <- paste0("<!doctype html><html lang='en'><head><meta charset='utf-8'>",
     "<meta name='viewport' content='width=device-width,initial-scale=1'>",
     "<title>", .bs_html(title), "</title><style>",
     "body{font:16px/1.6 system-ui,sans-serif;color:#173245;background:#f4f7fa;margin:0}",
-    "main{max-width:1200px;margin:2rem auto;padding:2rem;background:white}",
+    "*{box-sizing:border-box}main{max-width:1200px;margin:2rem auto;padding:2rem;background:white}",
+    "h1,p{overflow-wrap:anywhere}@media(max-width:600px){main{margin:0;padding:1rem}h1{font-size:1.8rem}}",
     "h1{font-size:2.3rem}h2{margin-top:2.4rem}.tag{color:#72510a;background:#fff2cc;padding:1rem}",
     ".table-scroll{overflow:auto}table{border-collapse:collapse;width:100%;font-size:.85rem}",
     "th,td{padding:.6rem;border-bottom:1px solid #dce3ea;text-align:left}th{background:#eaf1f6}",
@@ -132,6 +135,7 @@ bs_report <- function(results, out, title = "Histology burden report",
     "<section><h2>Background</h2><p>", .bs_html(background), "</p></section>",
     "<section><h2>Grouped results</h2>", .bs_html_table(groups), "</section>",
     "<section><h2>Slide results</h2>", .bs_html_table(results$slides), "</section>",
+    if (nrow(comparison)) paste0("<section><h2>Recorded comparison</h2>", .bs_html_table(comparison), "</section>") else "",
     "<section><h2>Methods and provenance</h2><pre>", .bs_html(provenance), "</pre></section>",
     "<section><h2>Data</h2><p><a href='results.json'>Canonical results</a> \u00b7 ",
     "<a href='Slides.csv'>Slide CSV</a> \u00b7 <a href='SHA256SUMS'>Checksums</a></p>",
@@ -139,7 +143,7 @@ bs_report <- function(results, out, title = "Histology burden report",
   writeLines(html, file.path(stage, "report.html"), useBytes = TRUE)
   unlink(file.path(stage, "SHA256SUMS"))
   .bs_manifest(stage)
-  if (file.exists(out) || !file.rename(stage, out)) stop("Could not commit report directory", call. = FALSE)
+  if (file.exists(out) || !file.rename(stage, out)) .bs_abort("Could not commit report directory", call. = FALSE)
   invisible(normalizePath(file.path(out, "report.html"), winslash = "/", mustWork = TRUE))
 }
 

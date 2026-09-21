@@ -10,7 +10,7 @@ Description: Tools for physically calibrated histology burden summaries,
 License: MIT + file LICENSE
 Encoding: UTF-8
 Depends: R (>= 4.2.0)
-Imports: digest, jsonlite
+Imports: cli, digest, jsonlite
 Suggests: testthat (>= 3.0.0), sf, spatstat.geom, shiny, processx, ps,
     openxlsx2, cellspecR, knitr, rmarkdown, covr
 VignetteBuilder: knitr

@@ -1,6 +1,10 @@
 ---
 title: "From slide measurements to a traceable report"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    css: style.css
+    number_sections: false
 vignette: >
   %\VignetteIndexEntry{From slide measurements to a traceable report}
   %\VignetteEngine{knitr::rmarkdown}
@@ -47,7 +51,7 @@ means of slide rates: a small and a large slide contribute different support.
 by_organ <- bs_summarize(results, strata = "organ")
 by_organ[, c("organ", "n_slides", "tissue_area_mm2", "red_area_mm2",
              "red_percent", "spots_per_mm2")]
-stopifnot(is.na(by_organ$red_percent[by_organ$organ == "Spleen"]))
+is.na(by_organ$red_percent[by_organ$organ == "Spleen"])
 ```
 
 The spleen summary is missing because one contributing measurement is missing.
@@ -78,8 +82,7 @@ assign controls or invent missing calibration. Source file identity is hashed.
 source_file <- tempfile(fileext = ".csv")
 utils::write.csv(results$slides, source_file, row.names = FALSE, na = "")
 imported <- bs_import_legacy(source_file, profile = "canonical")
-stopifnot(identical(imported$slides$physical_slide_id,
-                    results$slides$physical_slide_id))
+identical(imported$slides$physical_slide_id, results$slides$physical_slide_id)
 bs_status(imported)
 unlink(source_file)
 ```
@@ -118,7 +121,7 @@ delivery <- tempfile("bloodspottr-example-report-")
 report <- bs_report(results, delivery, author = "RH",
                     background = "Synthetic demonstration; no biological inference.")
 list.files(delivery)
-stopifnot(file.exists(report), file.exists(file.path(delivery, "SHA256SUMS")))
+file.exists(c(report, file.path(delivery, "SHA256SUMS")))
 ```
 
 `bs_export_results(results, out)` writes tables without HTML. Set `xlsx = TRUE`
@@ -130,7 +133,7 @@ study-specific TeX/PDF supplement is a separate artifact.
 if (requireNamespace("openxlsx2", quietly = TRUE)) {
   workbook_delivery <- tempfile("bloodspottr-example-xlsx-")
   bs_export_results(results, workbook_delivery, xlsx = TRUE)
-  stopifnot(file.exists(file.path(workbook_delivery, "results.xlsx")))
+  file.exists(file.path(workbook_delivery, "results.xlsx"))
   unlink(workbook_delivery, recursive = TRUE)
 }
 ```

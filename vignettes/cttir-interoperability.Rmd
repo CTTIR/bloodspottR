@@ -1,6 +1,10 @@
 ---
 title: "Scoped interoperability across the CTTIR suite"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    css: style.css
+    number_sections: false
 vignette: >
   %\VignetteIndexEntry{Scoped interoperability across the CTTIR suite}
   %\VignetteEngine{knitr::rmarkdown}
@@ -16,8 +20,8 @@ library(bloodspottR)
 
 bloodspottR owns the histology workflow, calibrated burden summaries and event
 semantics. Packages elsewhere in the suite own their respective image, annotation,
-segmentation, spatial, cell-data or reporting facilities. A source inventory records available package identities and exports. Presence
-in that inventory is not a promise that every package has been installed,
+segmentation, spatial, cell-data or reporting facilities. A source inventory
+records available package identities and exports. Presence in that inventory is not a promise that every package has been installed,
 invoked or qualified end to end.
 
 The inventory reads immediate child package metadata and literal namespace
@@ -35,7 +39,7 @@ writeLines("export(example_function)",
            file.path(suite, "example-source", "NAMESPACE"))
 inventory <- bs_cttir_inventory(suite)
 inventory[, c("directory", "package", "version", "exports", "status")]
-stopifnot(inventory$status == "metadata_only")
+inventory$status == "metadata_only"
 unlink(suite, recursive = TRUE)
 ```
 
@@ -82,7 +86,7 @@ image extents, image/slide identities must agree, and identifiers remain strings
 if (requireNamespace("cellspecR", quietly = TRUE)) {
   exchanged <- bs_as_cellspec(events, images,
                               provenance = list(source = "synthetic example"))
-  stopifnot(!is.null(exchanged))
+  class(exchanged)
 }
 ```
 

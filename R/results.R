@@ -1,6 +1,6 @@
 .bs_slides <- function(x) {
   if (inherits(x, "bs_result")) x$slides else if (is.data.frame(x)) x else
-    stop("Expected bs_result or a measurement data frame", call. = FALSE)
+    .bs_abort("Expected bs_result or a measurement data frame", call. = FALSE)
 }
 .bs_metrics <- c("tissue_area_mm2", "red_area_mm2", "candidate_spots",
                  "unresolved_bulk_events", "operational_events")
@@ -9,7 +9,7 @@
   for (i in which(!is.na(x))) {
     raw <- trimws(x[i])
     if (!grepl("^[+]?[0-9]+([.][0-9]*)?([eE][+-]?[0-9]+)?$", raw))
-      stop("Invalid numeric count: ", name, call. = FALSE)
+      .bs_abort("Invalid numeric count: ", name, call. = FALSE)
     parts <- strsplit(sub("^[+]", "", raw), "[eE]")[[1L]]
     exponent <- if (length(parts) == 2L) suppressWarnings(as.numeric(parts[2L])) else 0
     fractional <- if (grepl(".", parts[1L], fixed = TRUE)) nchar(sub("^[^.]*[.]", "", parts[1L])) else 0
@@ -17,15 +17,15 @@
     if (!nzchar(digits)) { result[i] <- 0; next }
     shift <- exponent - fractional
     if (!is.finite(shift) || nchar(digits) + shift > 16 || nchar(digits) + shift < 1)
-      stop("Count outside exact whole numeric range: ", name, call. = FALSE)
+      .bs_abort("Count outside exact whole numeric range: ", name, call. = FALSE)
     if (shift < 0) {
       cut <- nchar(digits) + shift
       if (grepl("[1-9]", substring(digits, cut + 1)))
-        stop("Count must be whole: ", name, call. = FALSE)
+        .bs_abort("Count must be whole: ", name, call. = FALSE)
       digits <- substr(digits, 1, cut)
     } else if (shift > 0) digits <- paste0(digits, paste(rep("0", shift), collapse = ""))
     if (nchar(digits) == 16 && digits > "9007199254740992")
-      stop("Count exceeds exact double precision: ", name, call. = FALSE)
+      .bs_abort("Count exceeds exact double precision: ", name, call. = FALSE)
     result[i] <- as.numeric(digits)
   }
   result
@@ -38,7 +38,7 @@
   x$events_per_mm2 <- x$operational_events / den
   if (any(vapply(x[c("red_percent", "spots_per_mm2", "events_per_mm2")],
                  function(v) any(is.infinite(v) | is.nan(v)), logical(1))))
-    stop("Derived rates exceed finite numeric range", call. = FALSE)
+    .bs_abort("Derived rates exceed finite numeric range", call. = FALSE)
   x
 }
 
@@ -52,33 +52,33 @@
 #' @return Invisibly `TRUE`, or an informative error.
 #' @export
 bs_validate <- function(x, level = "structure") {
-  if (!identical(level, "structure")) stop("Only structure validation is supported", call. = FALSE)
+  if (!identical(level, "structure")) .bs_abort("Only structure validation is supported", call. = FALSE)
   if (inherits(x, "bs_project")) {
     bs_project(x$path)
     return(invisible(TRUE))
   }
   d <- .bs_slides(x)
-  if (anyDuplicated(names(d))) stop("Duplicate measurement column names", call. = FALSE)
+  if (anyDuplicated(names(d))) .bs_abort("Duplicate measurement column names", call. = FALSE)
   if (!nrow(d) || !all(c("physical_slide_id", .bs_metrics) %in% names(d)))
-    stop("Required canonical measurement columns are missing or empty", call. = FALSE)
+    .bs_abort("Required canonical measurement columns are missing or empty", call. = FALSE)
   if (!is.character(d$physical_slide_id) || anyNA(d$physical_slide_id) ||
       any(!nzchar(trimws(d$physical_slide_id))) || anyDuplicated(d$physical_slide_id))
-    stop("physical_slide_id must contain unique nonempty strings", call. = FALSE)
+    .bs_abort("physical_slide_id must contain unique nonempty strings", call. = FALSE)
   for (nm in .bs_metrics) {
     v <- d[[nm]]
     if (!is.numeric(v) || any(is.nan(v)) || any(!is.finite(v[!is.na(v)])) || any(v < 0, na.rm = TRUE))
-      stop(nm, " must be nonnegative finite numbers or NA", call. = FALSE)
+      .bs_abort(nm, " must be nonnegative finite numbers or NA", call. = FALSE)
     if (nm %in% .bs_metrics[3:5] && any(v != floor(v) | v > 2^53, na.rm = TRUE))
-      stop(nm, " must be exact whole counts no larger than 2^53", call. = FALSE)
+      .bs_abort(nm, " must be exact whole counts no larger than 2^53", call. = FALSE)
   }
   if (any(d$red_area_mm2 > d$tissue_area_mm2, na.rm = TRUE))
-    stop("Red area exceeds tissue area", call. = FALSE)
+    .bs_abort("Red area exceeds tissue area", call. = FALSE)
   if (any(d$candidate_spots > 2^53 - d$unresolved_bulk_events, na.rm = TRUE))
-    stop("Combined event counts exceed exact double precision", call. = FALSE)
+    .bs_abort("Combined event counts exceed exact double precision", call. = FALSE)
   if (any(d$operational_events != d$candidate_spots + d$unresolved_bulk_events, na.rm = TRUE))
-    stop("Operational events must equal spots plus bulk events", call. = FALSE)
+    .bs_abort("Operational events must equal spots plus bulk events", call. = FALSE)
   if (any(d$tissue_area_mm2 == 0 & (d$candidate_spots > 0 | d$operational_events > 0), na.rm = TRUE))
-    stop("Positive counts require positive tissue support", call. = FALSE)
+    .bs_abort("Positive counts require positive tissue support", call. = FALSE)
   invisible(TRUE)
 }
 
@@ -103,24 +103,24 @@ bs_import_legacy <- function(path, profile = "p079") {
   if (dir.exists(path)) {
     candidates <- file.path(path, c("analysis.json", "results.json", "slides.csv", "results.csv"))
     candidates <- candidates[file.exists(candidates)]
-    if (length(candidates) != 1L) stop("Folder must contain exactly one result source; supply a file", call. = FALSE)
+    if (length(candidates) != 1L) .bs_abort("Folder must contain exactly one result source; supply a file", call. = FALSE)
     path <- candidates
   }
-  if (!file.exists(path)) stop("Result source does not exist", call. = FALSE)
+  if (!file.exists(path)) .bs_abort("Result source does not exist", call. = FALSE)
   metadata <- list()
   if (tolower(tools::file_ext(path)) == "json") {
     raw <- .bs_json(path)
     canonical <- !is.null(raw$slides)
     if (canonical && !identical(raw$schema_version, "1.0"))
-      stop("Unsupported result schema", call. = FALSE)
+      .bs_abort("Unsupported result schema", call. = FALSE)
     d <- if (canonical) raw$slides else raw$rows
     metadata <- raw[setdiff(names(raw), c("rows", "slides"))]
-    if (!is.data.frame(d)) stop("JSON must contain a rows measurement table", call. = FALSE)
+    if (!is.data.frame(d)) .bs_abort("JSON must contain a rows measurement table", call. = FALSE)
   } else if (tolower(tools::file_ext(path)) == "csv") {
     d <- utils::read.csv(path, colClasses = "character", check.names = FALSE,
-                         na.strings = c("NA", ""))
-  } else stop("Only CSV or JSON results are supported", call. = FALSE)
-  if (anyDuplicated(names(d))) stop("Duplicate column names", call. = FALSE)
+                         na.strings = "")
+  } else .bs_abort("Only CSV or JSON results are supported", call. = FALSE)
+  if (anyDuplicated(names(d))) .bs_abort("Duplicate column names", call. = FALSE)
   if (profile == "p079") {
     for (pair in list(c("tissue_area_mm2", "tissue_mm2"), c("red_area_mm2", "red_mm2"))) {
       if (!pair[1] %in% names(d) && pair[2] %in% names(d)) d[[pair[1]]] <- d[[pair[2]]]
@@ -129,16 +129,19 @@ bs_import_legacy <- function(path, profile = "p079") {
   for (nm in intersect(.bs_metrics, names(d))) {
     if (is.logical(d[[nm]]) && all(is.na(d[[nm]]))) d[[nm]] <- as.numeric(d[[nm]])
     if (is.character(d[[nm]])) {
+      d[[nm]][!is.na(d[[nm]]) & d[[nm]] == "NA"] <- NA_character_
       val <- if (nm %in% .bs_metrics[3:5]) .bs_parse_count_text(d[[nm]], nm) else
         suppressWarnings(as.numeric(d[[nm]]))
-      if (any(!is.na(d[[nm]]) & is.na(val))) stop("Invalid numeric measurement: ", nm, call. = FALSE)
+      if (any(!is.na(d[[nm]]) & is.na(val))) .bs_abort("Invalid numeric measurement: ", nm, call. = FALSE)
       d[[nm]] <- val
     }
   }
   out <- structure(list(schema_version = "1.0", slides = d, profile = profile,
     source = list(path = normalizePath(path), sha256 = digest::digest(file = path, algo = "sha256")),
-    metadata = metadata, provenance = metadata,
-    groups = if (is.data.frame(metadata$groups)) metadata$groups else data.frame()), class = "bs_result")
+    metadata = metadata,
+    provenance = if (is.list(metadata$provenance)) metadata$provenance else metadata,
+    groups = if (is.data.frame(metadata$groups)) metadata$groups else data.frame(),
+    comparison = if (is.data.frame(metadata$comparison)) metadata$comparison else NULL), class = "bs_result")
   bs_validate(out)
   out$slides <- .bs_rates(d)
   out
@@ -165,17 +168,17 @@ bs_summarize <- function(x, strata = NULL, qc_revision = NULL) {
     if (!is.data.frame(q) || !"physical_slide_id" %in% names(q) ||
         anyNA(q$physical_slide_id) || anyDuplicated(q$physical_slide_id) ||
         !setequal(q$physical_slide_id, d$physical_slide_id) ||
-        anyDuplicated(names(q))) stop("QC revision must uniquely cover all measured slides", call. = FALSE)
+        anyDuplicated(names(q))) .bs_abort("QC revision must uniquely cover all measured slides", call. = FALSE)
     protected <- c(.bs_metrics, "tissue_mm2", "red_mm2", "red_percent", "spots_per_mm2", "events_per_mm2")
     cols <- setdiff(names(q), "physical_slide_id")
-    if (any(cols %in% protected)) stop("QC revision cannot replace measurement columns", call. = FALSE)
+    if (any(cols %in% protected)) .bs_abort("QC revision cannot replace measurement columns", call. = FALSE)
     d[cols] <- q[match(d$physical_slide_id, q$physical_slide_id), cols, drop = FALSE]
   }
   if (!is.null(strata) && (!is.character(strata) || anyNA(strata) ||
       anyDuplicated(strata) || !all(strata %in% names(d)) || any(strata %in% c(.bs_metrics, "n_slides", "slide_ids", "red_percent", "spots_per_mm2", "events_per_mm2"))))
-    stop("strata must name distinct metadata columns", call. = FALSE)
+    .bs_abort("strata must name distinct metadata columns", call. = FALSE)
   if (length(strata) && any(vapply(d[strata], is.list, logical(1))))
-    stop("Grouping columns must be atomic", call. = FALSE)
+    .bs_abort("Grouping columns must be atomic", call. = FALSE)
   keys <- if (length(strata)) unique(d[strata]) else data.frame(.overall = "all")
   ans <- lapply(seq_len(nrow(keys)), function(i) {
     selected <- rep(TRUE, nrow(d))
@@ -191,12 +194,12 @@ bs_summarize <- function(x, strata = NULL, qc_revision = NULL) {
       if (nm %in% .bs_metrics[3:5] && !anyNA(values)) {
         remaining <- 2^53
         for (value in sort(values, decreasing = TRUE)) {
-          if (value > remaining) stop("Pooled counts exceed exact double precision", call. = FALSE)
+          if (value > remaining) .bs_abort("Pooled counts exceed exact double precision", call. = FALSE)
           remaining <- remaining - value
         }
       }
       row[[nm]] <- sum(values)
-      if (is.infinite(row[[nm]])) stop("Pooled measurements exceed finite numeric range", call. = FALSE)
+      if (is.infinite(row[[nm]])) .bs_abort("Pooled measurements exceed finite numeric range", call. = FALSE)
     }
     row$slide_ids <- I(list(z$physical_slide_id))
     .bs_rates(row)
@@ -222,12 +225,12 @@ bs_compare <- function(runs, support = "common") {
   support <- match.arg(support, c("common", "union"))
   if (!is.list(runs) || length(runs) != 2L || is.null(names(runs)) ||
       anyNA(names(runs)) || any(!nzchar(names(runs))) || anyDuplicated(names(runs)))
-    stop("runs must be a named list of exactly two results", call. = FALSE)
+    .bs_abort("runs must be a named list of exactly two results", call. = FALSE)
   lapply(runs, bs_validate)
   a <- .bs_rates(.bs_slides(runs[[1]])); b <- .bs_rates(.bs_slides(runs[[2]]))
   ids <- if (support == "common") intersect(a$physical_slide_id, b$physical_slide_id) else
     union(a$physical_slide_id, b$physical_slide_id)
-  if (!length(ids)) stop("No slides available on requested support", call. = FALSE)
+  if (!length(ids)) .bs_abort("No slides available on requested support", call. = FALSE)
   ia <- match(ids, a$physical_slide_id); ib <- match(ids, b$physical_slide_id)
   fields <- if (all(vapply(list(a, b), function(z) "support_id" %in% names(z), logical(1))))
     "support_id" else c("regions", "acquired_pixels")
@@ -240,7 +243,7 @@ bs_compare <- function(runs, support = "common") {
     }
   }
   if (support == "common" && any(!verified))
-    stop("Common support is unknown or differs; reconcile support or use union", call. = FALSE)
+    .bs_abort("Common support is unknown or differs; reconcile support or use union", call. = FALSE)
   out <- data.frame(physical_slide_id = ids, support_verified = verified)
   for (nm in c(.bs_metrics, "red_percent", "spots_per_mm2", "events_per_mm2")) {
     out[[paste0(nm, "_first")]] <- a[[nm]][ia]

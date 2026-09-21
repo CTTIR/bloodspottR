@@ -4,12 +4,36 @@
 \alias{bs_app}
 \title{Explore slide results in a local Shiny application}
 \usage{
-bs_app(results = NULL, launch = interactive())
+bs_app(
+  results = NULL,
+  launch = interactive(),
+  images = NULL,
+  title = "bloodspottR",
+  group_by = "organ",
+  group_label = "Tissue",
+  slide_python = Sys.getenv("BLOODSPOTTR_PYTHON", "")
+)
 }
 \arguments{
 \item{results}{A result list with a \code{slides} data frame, or \code{NULL}.}
 
 \item{launch}{Launch the application; \code{FALSE} returns a Shiny application.}
+
+\item{images}{Optional data frame or CSV manifest with \code{image_id}, \code{slide_id},
+\code{path}, and optional \code{label}, \code{annotations}, \code{scale_x}, \code{scale_y}, \code{offset_x},
+\code{offset_y}. Paths in CSV manifests are relative to the manifest. Images are
+PNG/JPEG previews or OpenSlide-supported native slides. Annotations are
+QuPath GeoJSON or point CSV with x/y image-pixel coordinates. Transforms map
+annotation coordinates into the displayed image: pixel * scale + offset.}
+
+\item{title}{Application title.}
+
+\item{group_by}{Metadata column used for grouping and filtering, default organ.}
+
+\item{group_label}{Display label for this grouping, default Tissue.}
+
+\item{slide_python}{Python executable with openslide-python and openslide-bin
+for native slides; unused for PNG/JPEG previews. No packages are installed.}
 }
 \value{
 A Shiny application object, invisibly when launched.
@@ -18,4 +42,11 @@ A Shiny application object, invisibly when launched.
 Presents imported measurements without altering scientific values. CSV uploads
 contain a slide table; JSON uploads contain a result object with a \code{slides}
 table. Uploaded files are parsed as data, never evaluated as R code.
+}
+\details{
+\code{results} can also be a saved result file path. The viewer's optional
+watch mode rereads this file and saved annotations every two seconds; failed
+reads retain the previous measurements. It never changes source files.
+Native QuPath project files and TissueGnostics acquisition projects need
+image/GeoJSON exports; they are not themselves OpenSlide image formats.
 }

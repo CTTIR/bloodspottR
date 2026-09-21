@@ -1,6 +1,10 @@
 ---
 title: "Saved reviews and reproducible external workers"
-output: rmarkdown::html_vignette
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    css: style.css
+    number_sections: false
 vignette: >
   %\VignetteIndexEntry{Saved reviews and reproducible external workers}
   %\VignetteEngine{knitr::rmarkdown}

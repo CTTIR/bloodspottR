@@ -1,0 +1,12 @@
+name: lint
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions: read-all
+jobs:
+  lint:
+    uses: CTTIR/.github/.github/workflows/lint.yaml@main
+    with:
+      blocking: true

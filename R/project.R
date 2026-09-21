@@ -1,10 +1,10 @@
 .bs_scalar_string <- function(x, name) {
   if (!is.character(x) || length(x) != 1L || is.na(x) || !nzchar(x))
-    stop(name, " must be one nonempty string", call. = FALSE)
+    .bs_abort(name, " must be one nonempty string", call. = FALSE)
 }
 .bs_json <- function(path) {
   if (!requireNamespace("jsonlite", quietly = TRUE))
-    stop("Install jsonlite to read or write JSON manifests", call. = FALSE)
+    .bs_abort("Install jsonlite to read or write JSON manifests", call. = FALSE)
   jsonlite::fromJSON(path, simplifyVector = TRUE, bigint_as_char = TRUE)
 }
 
@@ -19,30 +19,30 @@
 bs_project <- function(path, create = FALSE) {
   .bs_scalar_string(path, "path")
   if (!is.logical(create) || length(create) != 1L || is.na(create))
-    stop("create must be TRUE or FALSE", call. = FALSE)
+    .bs_abort("create must be TRUE or FALSE", call. = FALSE)
   manifest_path <- file.path(path, "bloodspottr-project.json")
   if (create) {
     if (!requireNamespace("jsonlite", quietly = TRUE))
-      stop("Install jsonlite to create a project", call. = FALSE)
-    if (file.exists(path) && !dir.exists(path)) stop("path is not a directory", call. = FALSE)
+      .bs_abort("Install jsonlite to create a project", call. = FALSE)
+    if (file.exists(path) && !dir.exists(path)) .bs_abort("path is not a directory", call. = FALSE)
     if (dir.exists(path) && length(list.files(path, all.files = TRUE, no.. = TRUE)))
-      stop("Creation requires an empty directory; existing work is preserved", call. = FALSE)
+      .bs_abort("Creation requires an empty directory; existing work is preserved", call. = FALSE)
     if (!dir.exists(path) && !dir.create(path, recursive = TRUE))
-      stop("Could not create project directory", call. = FALSE)
+      .bs_abort("Could not create project directory", call. = FALSE)
     manifest <- list(schema_version = "1.0", project_id = basename(normalizePath(path)),
                      created_utc = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
                      results = list(), scientific_status = "exploratory")
     staging <- tempfile("manifest-", tmpdir = path)
     on.exit(unlink(staging), add = TRUE)
     jsonlite::write_json(manifest, staging, auto_unbox = TRUE, pretty = TRUE)
-    if (!file.rename(staging, manifest_path)) stop("Manifest commit failed", call. = FALSE)
+    if (!file.rename(staging, manifest_path)) .bs_abort("Manifest commit failed", call. = FALSE)
   }
-  if (!file.exists(manifest_path)) stop("No bloodspottr-project.json found", call. = FALSE)
+  if (!file.exists(manifest_path)) .bs_abort("No bloodspottr-project.json found", call. = FALSE)
   manifest <- .bs_json(manifest_path)
   if (!identical(manifest$schema_version, "1.0") ||
       !is.character(manifest$project_id) || length(manifest$project_id) != 1L ||
       is.na(manifest$project_id) || !nzchar(manifest$project_id))
-    stop("Invalid or unsupported project manifest", call. = FALSE)
+    .bs_abort("Invalid or unsupported project manifest", call. = FALSE)
   structure(list(path = normalizePath(path), manifest = manifest), class = "bs_project")
 }
 

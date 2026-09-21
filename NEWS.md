@@ -1,5 +1,12 @@
 # bloodspottR 0.1.0.9000
 
+* Re-audit: exact count parsing and identity checks in Shiny, unambiguous filters,
+  preserved comparison exports, and catchable `bloodspottr_error` conditions.
+* Added preview/native whole-slide browsing, QuPath GeoJSON and point-CSV
+  selection, saved-file refresh, arbitrary tissue labels and configurable grouping.
+* Added a Shiny tutorial, responsive branded layout, completeness explanation,
+  and shared CTTIR check, coverage and blocking house-lint workflows.
+
 * Add validated legacy and canonical slide-result import, pooled burden summaries,
   and comparisons that require matching measured support.
 * Add immutable delivery directories with CSV, JSON, optional XLSX, HTML reports,

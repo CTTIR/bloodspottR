@@ -42,7 +42,9 @@ measure_event_burden <- function(n_events, red_pixels, tissue_pixels,
 #' @export
 aggregate_event_burden <- function(x, by = c("physical_slide_id", "organ")) {
   if (!is.data.frame(x) || !"n_events" %in% names(x))
-    stop("An event measurement table with n_events is required", call. = FALSE)
+    .bs_abort("An event measurement table with n_events is required", call. = FALSE)
+  if (any(by %in% c("n_events", "events_per_mm2", "relative_positive_area", "relative_positive_area_percent")))
+    .bs_abort("Grouping columns conflict with generated event metrics")
   input <- x
   input$n_spots <- input$n_events
   input$n_profiles <- rep(NA_real_, nrow(input))

@@ -27,7 +27,7 @@ test_that("session filters only views and failed upload preserves existing data"
   skip_if_not_installed("shiny")
   x <- .bs_app_results(bs_example())
   shiny::testServer(.bs_app_server(x), {
-    session$setInputs(organ = "Liver", qc = "All", search = "")
+    session$setInputs(organ = "Liver", qc = "", search = "")
     expect_equal(nrow(filtered()), 4L)
     session$setInputs(qc = "Structure only")
     expect_equal(filtered()$slide_id, "DEMO-002")
@@ -80,7 +80,7 @@ test_that("session renders metrics, tables, provenance and CSV download", {
   x <- .bs_app_results(bs_example())
   x$comparison <- data.frame(slide_id = x$slides$slide_id, delta = seq_len(8))
   shiny::testServer(.bs_app_server(x), {
-    session$setInputs(organ = "Liver", qc = "All", search = "")
+    session$setInputs(organ = "Liver", qc = "", search = "")
     expect_match(output$metrics$html, "Tissue area")
     expect_match(output$slides, "DEMO-001")
     expect_match(output$comparison, "DEMO-001")

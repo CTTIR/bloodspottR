@@ -6,3 +6,5 @@
 ^LICENSE\.md$
 ^bloodspottR.*\.tar\.gz$
 ^bloodspottR\.Rcheck$
+^\.github$
+^\.cttir-shared$

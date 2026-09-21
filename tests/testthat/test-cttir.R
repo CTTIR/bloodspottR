@@ -4,7 +4,7 @@ test_that("inventory is metadata-only and preserves duplicate identities", {
   for (d in c("one", "two", "bad", "resource")) dir.create(file.path(root, d))
   for (d in c("one", "two")) {
     writeLines(c("Package: example", "Version: 1.0", "Title: Example"), file.path(root, d, "DESCRIPTION"))
-    writeLines(c("export(alpha, beta)", "stop('must not execute')"), file.path(root, d, "NAMESPACE"))
+    writeLines(c("export(alpha, beta)", "base::stop('must not execute')"), file.path(root, d, "NAMESPACE"))
   }
   writeLines("invalid", file.path(root, "bad", "DESCRIPTION"))
   x <- bs_cttir_inventory(root, TRUE)

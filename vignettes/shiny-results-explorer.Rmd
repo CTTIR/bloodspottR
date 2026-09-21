@@ -1,0 +1,233 @@
+---
+title: "Explore slide results with Shiny"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    css: style.css
+vignette: >
+  %\VignetteIndexEntry{Explore slide results with Shiny}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(bloodspottR)
+```
+
+## Start a local explorer
+
+Install the optional **shiny** package, then run one of these commands in an
+interactive R session. The first starts empty; loading the demonstration is an
+explicit action. The second opens deterministic synthetic measurements and keeps
+the demonstration label visible.
+
+```{r launch, eval=FALSE}
+bs_app()
+bs_app(bs_example())
+```
+
+Stop the app with R's stop button or Escape/Ctrl+C in the console. The app displays
+recorded measurements and linked slide images. It does not edit annotations, run inference, train a model,
+or save changes to the supplied result object.
+
+## Browse annotated slides
+
+The viewer accepts any organ labels present in the results. The built-in viewer
+example includes liver, spleen, lung and kidney, and generates only synthetic
+images and measurements:
+
+```{r viewer-example}
+demo <- bs_viewer_example()
+unique(demo$results$slides$organ)
+demo$images[, c("image_id", "slide_id", "label")]
+```
+
+```{r viewer-launch, eval=FALSE}
+bs_app(demo$results, images = demo$images, title = "My slide collection")
+```
+
+Use Previous/Next or the Slide selector to move through the filtered slides.
+Choose an image/layer when a slide has several regions or a raw/overlay pair.
+Drag to pan, scroll or use the zoom buttons, and choose Fit image to return to the
+whole image. Click a vector annotation to see its saved properties and
+measurements; the annotation selector provides a keyboard alternative. A baked
+PNG overlay is viewable but its marks are not individually selectable without
+corresponding vector annotations.
+
+The `images` manifest has one row per image, with these fields:
+
+| Field | Meaning |
+| --- | --- |
+| `image_id` | Unique character image identity |
+| `slide_id` | Matching `slide_id` or `physical_slide_id` in the results |
+| `path` | Existing PNG/JPEG preview or native whole-slide file |
+| `label` | Optional display name for the region or layer |
+| `annotations` | Optional saved QuPath GeoJSON or point CSV (`x`, `y`, optional `annotation_id`, plus recorded measurements) |
+| `scale_x`, `scale_y` | Positive annotation-to-image coordinate scales, default 1 |
+| `offset_x`, `offset_y` | Annotation-to-image offsets in displayed image pixels, default 0 |
+
+A CSV manifest resolves file paths relative to its own directory. A data frame
+uses paths relative to the R working directory. Only these explicitly supplied
+files are served to the session; paths in uploaded result tables do not grant
+access to server files.
+
+Coordinates are in the displayed image's pixel frame, with x rightward and y
+downward. QuPath exports use full-resolution image pixels. For a preview at
+one-eighth resolution, set `scale_x = scale_y = 1/8`. For crops, supply the
+corresponding offsets. The transform is `display = annotation * scale + offset`.
+No registration is inferred. Points, lines and polygons (including polygon holes
+and multipart geometries) are supported. Limit vector overlays to 10,000 objects
+and 20 MiB per image; use review regions or rendered overlays for dense fields.
+
+## Open native whole-slide images
+
+Native tiled viewing uses [OpenSlide](https://openslide.org/api/python/) and the
+bundled [OpenSeadragon](https://openseadragon.github.io/) browser viewer. PNG/JPEG
+previews do not need Python. For native images, create an optional isolated
+Python environment and install the reader:
+
+```{bash, eval=FALSE}
+python3 -m venv slide-reader
+slide-reader/bin/python -m pip install openslide-python openslide-bin Pillow
+```
+
+On Windows, use `slide-reader/Scripts/python.exe`. Then point `slide_python` to
+that executable (or set `BLOODSPOTTR_PYTHON`). No installation or network download
+is performed by the app.
+
+```{r native-viewer, eval=FALSE}
+images <- data.frame(
+  image_id = "image-001", slide_id = "001",
+  path = "/data/slides/slide-001.svs",
+  annotations = "/data/annotations/slide-001.geojson",
+  label = "Whole slide"
+)
+bs_app(results, images = images, slide_python = "/path/to/slide-reader/bin/python")
+```
+
+Support depends on the installed OpenSlide reader and the actual file, not its
+extension alone. Native Aperio SVS and preview PNG paths are exercised during
+local qualification. A QuPath `.qpproj`/`.qpdata` or TissueGnostics `.aqproj` is a
+project container, not an OpenSlide image: export the image and QuPath GeoJSON
+first. This viewer does not write back to the native project.
+
+## Customize and watch saved results
+
+`title`, `group_by` and `group_label` adapt the interface to other tissue panels
+or a different metadata grouping. Labels and organ choices are not fixed:
+
+```{r custom-viewer, eval=FALSE}
+results$slides$sample_type <- c("Brain", "Skin", "Heart", "Lung",
+                              "Kidney", "Muscle", "Tumor", "Other")
+bs_app(results, images = images, title = "My experiment",
+       group_by = "sample_type", group_label = "Sample type")
+```
+
+Pass a saved result file path to enable measurement refresh, and use Refresh saved
+data or Watch saved files. Watch mode checks every two seconds; saving a new
+annotation export refreshes its properties without rerunning analysis. A failed
+result read retains the last successfully loaded measurements and displays an
+error. The original files remain unchanged. Watch mode follows the supplied
+result path, not an active QuPath editor's unsaved state. Selecting a browser
+upload or demonstration stops following that original result file.
+
+```{r saved-results, eval=FALSE}
+bs_app("/data/results/results.json", images = "/data/results/images.csv")
+```
+
+## Prepare an upload
+
+A CSV needs the following columns. `physical_slide_id` is accepted in place of
+`slide_id`; if both are supplied, they must agree. Optional `organ` and
+`qc_stratum` (or `stratum`) columns populate the filters.
+
+```{r minimal-table}
+slides <- data.frame(
+  slide_id = c("001", "002", "003"),
+  organ = c("Liver", "Liver", "Spleen"),
+  tissue_area_mm2 = c(1, 9, 2),
+  red_area_mm2 = c(0.1, 0, NA_real_),
+  candidate_spots = c(10, 0, NA_real_)
+)
+slides
+```
+
+Save this as CSV and select it with **Import slide results**. Files must be at
+most 20 MiB. Counts are checked as decimal text before conversion, so an integer
+outside the exact numeric range is rejected rather than rounded. Blank numeric
+cells and `NA` mean missing. Numeric-looking IDs retain leading zeros; the literal
+ID `NA` remains an identifier. JSON should use the package's canonical export,
+with a `slides` table and schema version `"1.0"`.
+
+```{r upload-file}
+file <- tempfile(fileext = ".csv")
+utils::write.csv(slides, file, row.names = FALSE, na = "")
+readLines(file)
+unlink(file)
+```
+
+An invalid upload displays the reason and retains the previous results. A
+successful upload resets filters. CSV downloads contain the filtered rows,
+including rows with missing measurements; formula-like text is escaped for
+spreadsheet viewing. Use `bs_export_results()` and its canonical JSON when exact
+metadata round-tripping is required.
+
+## Interpret the four cards
+
+The cards show selected slide count, summed tissue area, pooled red-positive
+percentage and pooled candidate density. Rates divide summed numerators by
+summed support. They do not average percentages across slides.
+
+For the two liver slides above, the red-positive percentage is
+`100 * (0.1 + 0) / (1 + 9) = 1%`, and the candidate density is
+`(10 + 0) / (1 + 9) = 1/mm²`. The unweighted mean of their percentages would be 5%,
+which answers a different question.
+
+```{r weighted-example, fig.width=6, fig.height=3.2, fig.alt="Two bars compare the correct pooled liver red-positive percentage of one percent with the unweighted mean of five percent."}
+old <- par(mar = c(5, 4, 1, 1))
+barplot(c("Pooled by tissue area" = 1, "Unweighted slide mean" = 5),
+        col = c("#185FA5", "#A3ADB5"), ylab = "Red-positive tissue (%)",
+        ylim = c(0, 6), las = 1, border = NA)
+par(old)
+```
+
+Selecting all three rows makes both pooled rates unavailable because the spleen
+measurements are unknown. Missing is not zero. A slide with zero tissue support
+also has undefined rates. The completeness line explains how many selected rows
+can appear in the plot; the cards still account for every selected row.
+
+## Navigate the results
+
+- **Slide viewer:** linked image layers, zoom/pan, recorded slide measurements and selectable annotations.
+- **Overview:** one point per slide with finite measurements and positive tissue
+  support. Tissue has both a color and a symbol. The exact values are in Slides.
+- **Slides:** all selected records, including missing measurements. Wide tables
+  scroll within their panel on small screens.
+- **Compare:** a supplied comparison table, filtered by physical-slide identity.
+  Build it with `bs_compare()` after declaring common support. The app does not
+  infer a second run or recompute a comparison.
+- **Methods & provenance:** the pooled arithmetic and supplied source metadata.
+  Missing provenance remains explicitly unknown.
+
+Use Tissue, Quality stratum and a literal Slide ID substring to narrow the view.
+An empty result is a filter outcome, not proof that no signal was measured.
+Keyboard users can start with **Skip to results**, then navigate the tabs and
+controls. On a narrow screen the controls stack above the results.
+
+## Scientific and hosting boundaries
+
+A candidate event is not necessarily one erythrocyte. QC labels are supplied
+review decisions, not automatic diagnoses; low signal does not establish a
+negative control. Filtering changes descriptive support and must be recorded if
+used for a report. Biological replication, animal-level inference and validation
+require a separate study design.
+
+The app is intended for a local R session. If you deploy it to a server, uploads
+are sent to that server; “local session” is not a confidentiality guarantee for a
+hosted deployment. Authentication, access control and retention policies belong
+to the hosting environment. Uploaded CSV/JSON is parsed as data, not executed.
+
+```{r viewer-cleanup, include=FALSE}
+unlink(demo$directory, recursive = TRUE)
+```

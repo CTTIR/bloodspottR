@@ -14,9 +14,9 @@
 #' bs_cttir_inventory(tempdir())
 bs_cttir_inventory <- function(root, check_installed = FALSE) {
   if (!is.character(root) || length(root) != 1L || is.na(root) || !dir.exists(root))
-    stop("root must be an existing directory", call. = FALSE)
+    .bs_abort("root must be an existing directory", call. = FALSE)
   if (!is.logical(check_installed) || length(check_installed) != 1L || is.na(check_installed))
-    stop("check_installed must be TRUE or FALSE", call. = FALSE)
+    .bs_abort("check_installed must be TRUE or FALSE", call. = FALSE)
   paths <- sort(list.dirs(root, recursive = FALSE, full.names = TRUE))
   paths <- paths[file.exists(file.path(paths, "DESCRIPTION"))]
   empty <- data.frame(directory = character(), path = character(), package = character(),
