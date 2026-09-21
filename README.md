@@ -1,4 +1,4 @@
-# bloodspottR
+# bloodspottR <img src="inst/figures/bloodspottR_icon_600dpi.png" align="right" height="160" alt="bloodspottR hex sticker" />
 
 **Calibrated histology measurements, traceable review and transparent reporting.**
 
