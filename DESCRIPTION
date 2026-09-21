@@ -13,6 +13,7 @@ Depends: R (>= 4.2.0)
 Imports: cli, digest, jsonlite
 Suggests: testthat (>= 3.0.0), sf, spatstat.geom, shiny, processx, ps,
     openxlsx2, cellspecR, knitr, rmarkdown, covr
+Remotes: CTTIR/cellspecR
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
