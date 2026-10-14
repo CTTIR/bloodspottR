@@ -8,3 +8,5 @@
 ^bloodspottR\.Rcheck$
 ^\.github$
 ^\.cttir-shared$
+^_pkgdown\.yml$
+^site$

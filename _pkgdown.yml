@@ -1,0 +1,25 @@
+template:
+  package: themakR
+development:
+  mode: auto
+destination: site
+reference:
+  - title: Projects, analysis and results
+    contents:
+      - starts_with("bs_")
+  - title: Measurement primitives
+    contents:
+      - aggregate_burden
+      - aggregate_event_burden
+      - cell_pattern
+      - measure_burden
+      - measure_event_burden
+      - tissue_window
+articles:
+  - title: Guides
+    navbar: ~
+    contents:
+      - bloodspottr-workflow
+      - review-and-backends
+      - shiny-results-explorer
+      - cttir-interoperability

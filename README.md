@@ -1,4 +1,4 @@
-# bloodspottR <img src="inst/figures/bloodspottR_icon_600dpi.png" align="right" height="160" alt="bloodspottR hex sticker" />
+# bloodspottR <img src="man/figures/logo.png" align="right" height="160" alt="bloodspottR hex sticker" />
 
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![R-CMD-check](https://github.com/CTTIR/bloodspottR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CTTIR/bloodspottR/actions/workflows/R-CMD-check.yaml)
@@ -68,7 +68,7 @@ if (interactive()) bs_app(demo$results, images = demo$images,
 unlink(demo$directory, recursive = TRUE)
 ```
 
-![Annotated-slide browser with synthetic data and a selected annotation](inst/figures/shiny-demo.png)
+![Annotated-slide browser with synthetic data and a selected annotation](man/figures/shiny-demo.png)
 
 For your data, pass an image manifest with `image_id`, `slide_id`, `path` and
 optional `annotations` and `label` columns. PNG/JPEG previews and saved overlays
