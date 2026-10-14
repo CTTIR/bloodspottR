@@ -79,7 +79,7 @@ measurements. Multiple images or regions may link to one slide. `group_by` and
 
 Passing a result file path enables refresh of saved measurements; Watch saved
 files also refreshes exported annotations. It never edits the source project or
-reruns analysis. See the [viewer tutorial](vignettes/shiny-results-explorer.Rmd)
+reruns analysis. See the [viewer tutorial](https://github.com/CTTIR/bloodspottR/blob/main/vignettes/shiny-results-explorer.Rmd)
 for coordinate transforms, Python setup, format limits and complete examples.
 
 ## Import, summarize and preserve a delivery
@@ -142,10 +142,10 @@ vignette("shiny-results-explorer", package = "bloodspottR")
 
 | Tutorial | Start here when you want to… |
 | --- | --- |
-| [Measurements to a report](vignettes/bloodspottr-workflow.Rmd) | Import, pool, compare and export slide measurements |
-| [Shiny results explorer](vignettes/shiny-results-explorer.Rmd) | Upload data, filter slides and interpret missing values |
-| [CTTIR interoperability](vignettes/cttir-interoperability.Rmd) | Exchange calibrated candidates with cellspecR |
-| [Review and backends](vignettes/review-and-backends.Rmd) | Record saved reviews and invoke a trusted external worker |
+| [Measurements to a report](https://github.com/CTTIR/bloodspottR/blob/main/vignettes/bloodspottr-workflow.Rmd) | Import, pool, compare and export slide measurements |
+| [Shiny results explorer](https://github.com/CTTIR/bloodspottR/blob/main/vignettes/shiny-results-explorer.Rmd) | Upload data, filter slides and interpret missing values |
+| [CTTIR interoperability](https://github.com/CTTIR/bloodspottR/blob/main/vignettes/cttir-interoperability.Rmd) | Exchange calibrated candidates with cellspecR |
+| [Review and backends](https://github.com/CTTIR/bloodspottR/blob/main/vignettes/review-and-backends.Rmd) | Record saved reviews and invoke a trusted external worker |
 
 The vignettes use runnable synthetic examples and state each interface's limits. Function
 help documents the implemented interfaces. Example data are synthetic.
@@ -183,7 +183,7 @@ or de-identified examples.
 ## License
 
 MIT. Copyright 2026 R. Heller. See [LICENSE.md](LICENSE.md).
-The bundled OpenSeadragon viewer retains its [BSD-3-Clause license](inst/app/vendor/LICENSE-openseadragon.txt).
+The bundled OpenSeadragon viewer retains its [BSD-3-Clause license](https://github.com/CTTIR/bloodspottR/blob/main/inst/app/vendor/LICENSE-openseadragon.txt).
 OpenSlide is an optional external dependency and is not bundled.
 
 ## Use of LLM tools
