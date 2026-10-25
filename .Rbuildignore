@@ -10,3 +10,5 @@
 ^\.cttir-shared$
 ^_pkgdown\.yml$
 ^site$
+^tools/branding$
+^pkgdown$

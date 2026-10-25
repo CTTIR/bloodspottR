@@ -1,4 +1,4 @@
-# bloodspottR <img src="man/figures/logo.png" align="right" height="160" alt="bloodspottR hex sticker" />
+# bloodspottR <img src="man/figures/logo.png" align="right" width="120" height="139" alt="bloodspottR logo" />
 
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![R-CMD-check](https://github.com/CTTIR/bloodspottR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CTTIR/bloodspottR/actions/workflows/R-CMD-check.yaml)
@@ -203,3 +203,8 @@ must be reviewed and revised before inclusion, and references must be verified
 against their DOI, arXiv ID or ISBN.
 
 Local software setup: vLLM with Python/PyTorch, plus R and RStudio.
+
+## Branding
+
+Editable R sources and regeneration instructions are in
+[tools/branding](https://github.com/CTTIR/bloodspottR/tree/main/tools/branding).
