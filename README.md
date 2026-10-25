@@ -1,4 +1,4 @@
-# bloodspottR <img src="man/figures/logo.png" align="right" width="120" height="139" alt="bloodspottR logo" />
+# bloodspottR <picture class="cttir-readme-logo"><source class="cttir-logo-dark-source" media="(prefers-color-scheme: dark)" srcset="man/figures/logo-with-name-dark.png" /><img src="man/figures/logo-with-name.png" align="right" alt="bloodspottR logo" width="120" height="155" /></picture>
 
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![R-CMD-check](https://github.com/CTTIR/bloodspottR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CTTIR/bloodspottR/actions/workflows/R-CMD-check.yaml)
