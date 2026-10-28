@@ -2,7 +2,9 @@
 # Assets are local package files, independent of application data.
 .cttir_brand_text <- function(file) {
   path <- system.file("branding", file, package = "bloodspottR")
-  if (!nzchar(path)) stop("The packaged branding asset is missing: ", file)
+  if (!nzchar(path)) {
+    .bs_abort("The packaged branding asset is missing: ", file)
+  }
   paste(readLines(path, warn = FALSE), collapse = "\n")
 }
 
