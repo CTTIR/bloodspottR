@@ -188,7 +188,7 @@ bs_app <- function(results = NULL, launch = interactive(), images = NULL,
                     shiny::tags$meta(name = "viewport", content = "width=device-width, initial-scale=1")),
     shiny::tags$a(href = "#workspace", class = "skip-link", "Skip to results"),
     shiny::tags$header(class = "bs-header", shiny::tags$div(class = "bs-brand",
-      shiny::tags$img(src = .bs_app_logo(), alt = "", class = "bs-logo"),
+      .cttir_brand_logo(),
       shiny::tags$span(title))),
     shiny::tags$div(class = "bs-intro", shiny::tags$h1("Slide browser")),
     shiny::sidebarLayout(

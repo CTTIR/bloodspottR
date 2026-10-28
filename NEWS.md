@@ -1,5 +1,9 @@
 # bloodspottR 0.1.0.9000
 
+* Standardize the named v5 package logo across README, documentation pages
+  and available application headers, with matching light and dark artwork.
+
+
 - Preserve exact tissue boundaries across platforms and distinguish exported table names during folder imports.
 
 * Re-audit: exact count parsing and identity checks in Shiny, unambiguous filters,
