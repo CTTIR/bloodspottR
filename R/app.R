@@ -283,7 +283,8 @@ bs_app <- function(results = NULL, launch = interactive(), images = NULL,
       if (!is.null(input$search) && nzchar(input$search)) d <- d[grepl(input$search, d$slide_id, fixed = TRUE), , drop = FALSE]
       d
     })
-    viewer <- .bs_viewer_server(input, output, session, current, filtered, image_manifest, slide_python, watched_path)
+    viewer <- .bs_viewer_server(input, output, session, current, filtered, image_manifest,
+                               slide_python, watched_path, group_by)
     output$status <- shiny::renderText({
       if (!is.null(error())) paste("Import failed:", error(), if (is.null(current())) "No results loaded." else "Previous results retained.") else mode()
     })

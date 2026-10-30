@@ -41,9 +41,9 @@
   if (!is.character(python) || length(python) != 1L || is.na(python) || !nzchar(python))
     .bs_abort("Set slide_python to a Python executable with openslide-python and openslide-bin installed")
   worker <- system.file("python", "slide_tiles.py", package = "bloodspottR")
-  result <- processx::run(python, c(worker, args), error_on_status = FALSE,
-                         timeout = 30, cleanup_tree = TRUE)
-  if (result$status != 0L) .bs_abort("Native slide reader failed: ", result$stderr)
+  result <- .bs_run_process(python, c(worker, args), timeout = 30)
+  if (isTRUE(result$timeout)) .bs_abort("Native slide reader timed out")
+  if (!identical(result$status, 0L)) .bs_abort("Native slide reader failed: ", result$stderr)
   result$stdout
 }
 
@@ -111,7 +111,10 @@
     values <- unlist(coords, use.names = FALSE)
     if (!is.numeric(values) || length(values) != 2L || any(!is.finite(values)))
       .bs_abort("Annotation coordinates must be finite two-dimensional pixel coordinates")
-    as.list(c(values[1] * row$scale_x + row$offset_x, values[2] * row$scale_y + row$offset_y))
+    transformed <- c(values[1] * row$scale_x + row$offset_x,
+                     values[2] * row$scale_y + row$offset_y)
+    if (any(!is.finite(transformed))) .bs_abort("Transformed annotation coordinates exceed finite range")
+    as.list(transformed)
   }
   for (i in seq_along(features)) {
     f <- features[[i]]
@@ -166,7 +169,7 @@
 }
 
 .bs_viewer_server <- function(input, output, session, current, filtered, images,
-                              slide_python, result_path = NULL) {
+                              slide_python, result_path = NULL, group_by = "organ") {
   cache <- tempfile("bloodspottr-tiles-"); dir.create(cache)
   session$onSessionEnded(function() unlink(cache, recursive = TRUE))
   info_cache <- new.env(parent = emptyenv())
@@ -183,6 +186,8 @@
     path <- result_path()
     if (!is.null(path)) {
       updated <- tryCatch(.bs_app_results(bs_import_legacy(path)), error = identity)
+      if (!inherits(updated, "error") && !group_by %in% names(updated$slides))
+        updated <- simpleError(paste("Missing grouping column:", group_by))
       if (inherits(updated, "error")) failure(conditionMessage(updated)) else {
         if (!identical(updated, shiny::isolate(current()))) current(updated)
         failure(NULL)

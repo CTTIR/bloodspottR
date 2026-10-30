@@ -13,7 +13,8 @@ bs_compare(runs, support = "common")
 }
 \value{
 Data frame with baseline/run values, second-minus-first differences
-and \code{support_verified}. Run names and excluded IDs are attributes.
+and \code{support_verified}. Run names and excluded IDs are attributes, preserved
+by bs_export_results() and bs_import_legacy() through comparison_context.
 }
 \description{
 \code{common} aligns shared physical slides and requires identical \code{support_id},

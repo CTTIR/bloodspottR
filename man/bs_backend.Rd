@@ -28,5 +28,8 @@ The explicitly trusted executable receives two final arguments: a JSON request
 path and an output staging directory. It must write result.json with
 schema_version 1, status 'complete', and a nonempty artifacts array of relative
 file paths. A subprocess is isolated and cleaned up after completion or timeout.
+Workers must keep helpers attached to their ancestry and join them before
+successful exit. Intentionally detached processes are unsupported. Logs are
+limited to 10 MiB per stream. This is not an OS security sandbox.
 No worker is installed or started by this constructor.
 }

@@ -160,16 +160,17 @@ test_that("native subprocess errors and argument transport have bounded behavior
   skip_if_not_installed("processx")
   expect_error(.bs_slide_python("", c("info", "missing.svs")), "slide_python")
   calls <- list()
-  local_mocked_bindings(run = function(command, args, ...) {
+  local_mocked_bindings(.bs_run_process = function(command, args, ...) {
     calls[[length(calls) + 1L]] <<- list(command = command, args = args, settings = list(...))
     if (command == "bad") return(list(status = 1L, stderr = "reader error"))
+    if (command == "slow") return(list(status = NA_integer_, timeout = TRUE, stderr = ""))
     list(status = 0L, stdout = '{"width":1}', stderr = "")
-  }, .package = "processx")
+  })
   expect_match(.bs_slide_python("python", c("info", "a path.svs")), "width")
   expect_equal(tail(calls[[1]]$args, 2), c("info", "a path.svs"))
   expect_equal(calls[[1]]$settings$timeout, 30)
-  expect_true(calls[[1]]$settings$cleanup_tree)
   expect_error(.bs_slide_python("bad", c("info", "x")), "reader error")
+  expect_error(.bs_slide_python("slow", c("info", "x")), "timed out")
 })
 
 test_that("upload request limits are scoped to the running application", {

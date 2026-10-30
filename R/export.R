@@ -4,6 +4,8 @@
 #' manifest. Existing destinations are never overwritten. CSV character values
 #' beginning with spreadsheet formula characters are escaped for safe viewing;
 #' canonical JSON preserves the original strings.
+#' Comparison run names and excluded slide IDs are saved as comparison_context
+#' and restored as comparison attributes by bs_import_legacy().
 #' @param results A validated bloodspottR result object.
 #' @param out A new output directory.
 #' @param xlsx Include an Excel workbook (requires openxlsx2).
@@ -37,7 +39,9 @@ bs_export_results <- function(results, out, xlsx = FALSE) {
     }
     utils::write.csv(safe, file.path(stage, paste0(name, ".csv")), row.names = FALSE, na = "")
   }
-  jsonlite::write_json(unclass(results), file.path(stage, "results.json"), auto_unbox = TRUE,
+  canonical <- unclass(results)
+  canonical$comparison_context <- .bs_comparison_context(results)
+  jsonlite::write_json(canonical, file.path(stage, "results.json"), auto_unbox = TRUE,
                        pretty = TRUE, dataframe = "rows", digits = NA, null = "null", na = "null")
   if (xlsx) {
     workbook <- openxlsx2::wb_workbook()
@@ -59,6 +63,29 @@ bs_export_results <- function(results, out, xlsx = FALSE) {
   if (!is.character(out) || length(out) != 1L || is.na(out) || !nzchar(out))
     .bs_abort("out must be one nonempty path", call. = FALSE)
   if (file.exists(out) || dir.exists(out)) .bs_abort("Output already exists", call. = FALSE)
+}
+
+# Data-frame attributes are not serialized by JSON writers. Keep the direction
+# and excluded physical-slide IDs alongside the table in the canonical object.
+.bs_comparison_context <- function(results) {
+  runs <- attr(results$comparison, "runs", exact = TRUE)
+  excluded <- attr(results$comparison, "excluded_ids", exact = TRUE)
+  context <- if (!is.null(runs) || !is.null(excluded))
+    list(runs = runs, excluded_ids = excluded) else results$comparison_context
+  if (is.null(context)) return(NULL)
+  if (!is.data.frame(results$comparison) || !is.list(context) ||
+      !is.character(context$runs) || length(context$runs) != 2L ||
+      anyNA(context$runs) || any(!nzchar(context$runs)) || anyDuplicated(context$runs) ||
+      !is.list(context$excluded_ids) ||
+      !identical(names(context$excluded_ids), c("first", "second")))
+    .bs_abort("Invalid comparison context")
+  context$excluded_ids <- lapply(context$excluded_ids, function(ids) {
+    if (is.list(ids) && !length(ids)) ids <- character()
+    if (!is.character(ids) || anyNA(ids) || any(!nzchar(ids)) || anyDuplicated(ids))
+      .bs_abort("Invalid excluded-slide IDs in comparison context")
+    ids
+  })
+  context
 }
 
 .bs_manifest <- function(path) {
@@ -119,6 +146,14 @@ bs_report <- function(results, out, title = "Histology burden report",
                                null = "null", na = "null")
   groups <- if (is.data.frame(results$groups)) results$groups else data.frame()
   comparison <- if (is.data.frame(results$comparison)) results$comparison else data.frame()
+  comparison_context <- .bs_comparison_context(results)
+  comparison_details <- if (is.null(comparison_context))
+    "<p>Run names and exclusions were not supplied.</p>" else paste0(
+      "<p>First run: ", .bs_html(comparison_context$runs[1]),
+      "; second run: ", .bs_html(comparison_context$runs[2]),
+      ". Differences are second minus first.</p>",
+      "<p>Excluded physical-slide IDs (outside the selected comparison support):</p><pre>",
+      .bs_html(jsonlite::toJSON(comparison_context$excluded_ids, pretty = TRUE)), "</pre>")
   html <- paste0("<!doctype html><html lang='en'><head><meta charset='utf-8'>",
     "<meta name='viewport' content='width=device-width,initial-scale=1'>",
     "<title>", .bs_html(title), "</title><style>",
@@ -135,7 +170,8 @@ bs_report <- function(results, out, title = "Histology burden report",
     "<section><h2>Background</h2><p>", .bs_html(background), "</p></section>",
     "<section><h2>Grouped results</h2>", .bs_html_table(groups), "</section>",
     "<section><h2>Slide results</h2>", .bs_html_table(results$slides), "</section>",
-    if (nrow(comparison)) paste0("<section><h2>Recorded comparison</h2>", .bs_html_table(comparison), "</section>") else "",
+    if (nrow(comparison)) paste0("<section><h2>Recorded comparison</h2>", comparison_details,
+                               .bs_html_table(comparison), "</section>") else "",
     "<section><h2>Methods and provenance</h2><pre>", .bs_html(provenance), "</pre></section>",
     "<section><h2>Data</h2><p><a href='results.json'>Canonical results</a> \u00b7 ",
     "<a href='Slides.csv'>Slide CSV</a> \u00b7 <a href='SHA256SUMS'>Checksums</a></p>",

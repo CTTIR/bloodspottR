@@ -4,6 +4,9 @@
 #' path and an output staging directory. It must write result.json with
 #' schema_version 1, status 'complete', and a nonempty artifacts array of relative
 #' file paths. A subprocess is isolated and cleaned up after completion or timeout.
+#' Workers must keep helpers attached to their ancestry and join them before
+#' successful exit. Intentionally detached processes are unsupported. Logs are
+#' limited to 10 MiB per stream. This is not an OS security sandbox.
 #' No worker is installed or started by this constructor.
 #' @param command Path or PATH name of a trusted executable.
 #' @param args Character arguments preceding the request/output paths.
@@ -77,11 +80,10 @@ bs_run_backend <- function(backend, operation, inputs, parameters = list(), out,
   on.exit(unlink(request_file), add = TRUE)
   jsonlite::write_json(request, request_file, auto_unbox = TRUE, pretty = TRUE, digits = NA)
   request_hash <- digest::digest(file = request_file, algo = "sha256")
-  process <- processx::run(backend$command, c(backend$args, request_file, normalizePath(stage)),
-                           timeout = timeout, error_on_status = FALSE, cleanup_tree = TRUE,
-                           stdout = "|", stderr = "|")
-  if (isTRUE(process$timeout)) .bs_abort("Worker timed out; owned process tree cleaned up", call. = FALSE)
-  if (process$status != 0L) .bs_abort(paste("Worker failed:", process$stderr), call. = FALSE)
+  process <- .bs_run_process(backend$command,
+    c(backend$args, request_file, normalizePath(stage)), timeout)
+  if (isTRUE(process$timeout)) .bs_abort("Worker timed out; observed owned processes cleaned up", call. = FALSE)
+  if (!identical(process$status, 0L)) .bs_abort(paste("Worker failed:", process$stderr), call. = FALSE)
   manifest <- file.path(stage, "result.json")
   if (!file.exists(manifest) || dir.exists(manifest)) .bs_abort("Worker did not produce result.json", call. = FALSE)
   staged_files <- list.files(stage, recursive = TRUE, full.names = TRUE, all.files = TRUE,

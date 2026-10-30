@@ -113,6 +113,15 @@ to a new destination. Failed or timed-out jobs do not
 publish a result directory. The executable is trusted code: the subprocess
 protocol is not a security sandbox or a rollback mechanism for worker side effects.
 
+Execution requires `processx` and `ps`. Ancestry is observed while the worker runs;
+recorded process handles include creation times to avoid targeting reused process
+IDs. Observed descendants are terminated and checked before output publication,
+including on timeout. Workers must keep helpers attached to their ancestry and
+join them before successful exit. Intentionally detached processes that disappear
+from the tree between observations are unsupported. Log streams use temporary
+files so inherited pipes cannot prevent timeout completion; each captured stream
+must be at most 10 MiB. Reduce verbosity in workers that exceed that limit.
+
 ```{r worker, eval=requireNamespace("processx", quietly=TRUE)}
 worker <- file.path(work, "worker.R")
 writeLines(c(

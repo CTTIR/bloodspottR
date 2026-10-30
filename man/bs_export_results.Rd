@@ -21,4 +21,6 @@ Creates a new directory with CSV tables, optional Excel output and a SHA-256
 manifest. Existing destinations are never overwritten. CSV character values
 beginning with spreadsheet formula characters are escaped for safe viewing;
 canonical JSON preserves the original strings.
+Comparison run names and excluded slide IDs are saved as comparison_context
+and restored as comparison attributes by bs_import_legacy().
 }

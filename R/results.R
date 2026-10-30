@@ -142,7 +142,14 @@ bs_import_legacy <- function(path, profile = "p079") {
     metadata = metadata,
     provenance = if (is.list(metadata$provenance)) metadata$provenance else metadata,
     groups = if (is.data.frame(metadata$groups)) metadata$groups else data.frame(),
-    comparison = if (is.data.frame(metadata$comparison)) metadata$comparison else NULL), class = "bs_result")
+    comparison = if (is.data.frame(metadata$comparison)) metadata$comparison else NULL,
+    comparison_context = metadata$comparison_context), class = "bs_result")
+  context <- .bs_comparison_context(out)
+  if (!is.null(context)) {
+    out$comparison_context <- context
+    attr(out$comparison, "runs") <- context$runs
+    attr(out$comparison, "excluded_ids") <- context$excluded_ids
+  }
   bs_validate(out)
   out$slides <- .bs_rates(d)
   out
@@ -220,7 +227,8 @@ bs_summarize <- function(x, strata = NULL, qc_revision = NULL) {
 #' @param runs Named list of exactly two imported results or canonical tables.
 #' @param support `"common"` or `"union"`.
 #' @return Data frame with baseline/run values, second-minus-first differences
-#'   and `support_verified`. Run names and excluded IDs are attributes.
+#'   and `support_verified`. Run names and excluded IDs are attributes, preserved
+#'   by bs_export_results() and bs_import_legacy() through comparison_context.
 #' @export
 bs_compare <- function(runs, support = "common") {
   support <- match.arg(support, c("common", "union"))

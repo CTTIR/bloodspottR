@@ -1,5 +1,13 @@
 # bloodspottR 0.1.0.9000
 
+* Track and verify observed worker descendants during timeout, failure and
+  successful completion; isolate output streams from inherited pipes and bound
+  receipt logs. Native slide reads use the same process handling.
+* Preserve comparison run names and excluded physical-slide IDs in canonical
+  deliveries and display comparison direction in HTML reports.
+* Retain valid results when a saved refresh loses its configured grouping
+  column, and reject annotation transforms that overflow numeric range.
+
 * Standardize the named v5 package logo across README, documentation pages
   and available application headers, with matching light and dark artwork.
 

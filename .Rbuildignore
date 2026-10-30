@@ -12,3 +12,4 @@
 ^site$
 ^tools/branding$
 ^pkgdown$
+^MAINTENANCE\.md$

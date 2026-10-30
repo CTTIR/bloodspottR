@@ -103,6 +103,10 @@ list.files(delivery)
 
 `bs_report()` writes self-contained HTML, CSV tables, canonical JSON and a
 SHA-256 manifest. Supplied comparisons also receive a `Comparison.csv` table.
+Canonical JSON preserves their run names and excluded-slide IDs in
+`comparison_context`; reimport restores these attributes and the HTML report
+states the comparison direction. Standalone comparison CSVs need this context
+alongside them.
 `bs_export_results()` writes the table bundle without HTML;
 `xlsx = TRUE` adds a workbook when **openxlsx2** is installed. Large images,
 individual annotation geometry and training weights remain separate artifacts.
@@ -164,6 +168,10 @@ whole-slide images. Native inference, portable DNN training, QuPath project
 writeback and generic slide image PDF supplements remain separate work.
 Configured external workers are trusted code, not a security sandbox. Missing
 measurements remain unknown, and low-signal slides are not inferred controls.
+Worker execution requires **processx** and **ps**. The runner tracks process
+ancestry and verifies termination of observed descendants before committing
+output. Workers must join helpers before successful exit; intentionally detached
+processes are unsupported. Captured logs are limited to 10 MiB per stream.
 
 ## Input contracts and errors
 
