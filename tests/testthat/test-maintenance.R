@@ -56,17 +56,19 @@ test_that("worker completion and failure clean observed descendants with inherit
   for (status in c(0L, 7L)) {
     root <- tempfile(); dir.create(root)
     script <- file.path(root, "worker with spaces.R")
-    pid_file <- file.path(root, "child.pid")
+    identity_file <- file.path(root, "child.rds")
     writeLines(c('a <- commandArgs(TRUE)',
       'child <- processx::process$new(Sys.which("sleep"), "30", stdout="", stderr="", cleanup=FALSE, cleanup_tree=FALSE)',
-      'writeLines(as.character(child$get_pid()), a[1])',
+      'saveRDS(list(pid=child$get_pid(), time=ps::ps_create_time(child$as_ps_handle())), a[1])',
       'cat(a[2]); cat("diagnostic", file=stderr()); Sys.sleep(0.5)',
       paste0('quit(status=', status, ')')), script)
     result <- .bs_run_process(file.path(R.home("bin"), "Rscript"),
-      c(script, pid_file, "literal ; $value"), timeout = 3)
-    pid <- as.integer(readLines(pid_file))
-    handle <- tryCatch(ps::ps_handle(pid), no_such_process = function(e) NULL)
-    running <- !is.null(handle) && ps::ps_is_running(handle) && ps::ps_status(handle) != "zombie"
+      c(script, identity_file, "literal ; $value"), timeout = 3)
+    identity <- readRDS(identity_file)
+    # Retain the observed creation time: a reaped PID cannot be queried again,
+    # and a subsequently reused PID must not become this test's cleanup target.
+    handle <- ps::ps_handle(identity$pid, time = identity$time)
+    running <- ps::ps_is_running(handle) && ps::ps_status(handle) != "zombie"
     if (running) ps::ps_kill(handle)
     expect_false(running)
     expect_identical(result$status, status)

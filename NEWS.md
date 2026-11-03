@@ -1,5 +1,9 @@
 # bloodspottR 0.1.0.9000
 
+* Retry a fresh descendant snapshot when a child vanishes during Linux process
+  enumeration. Preserve observed process identities and propagate repeated or
+  unrelated inspection errors; tests retain child identity before it exits.
+
 * Track and verify observed worker descendants during timeout, failure and
   successful completion; isolate output streams from inherited pipes and bound
   receipt logs. Native slide reads use the same process handling.

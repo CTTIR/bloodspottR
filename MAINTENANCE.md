@@ -131,11 +131,38 @@ Rscript --vanilla -e 'pkgdown::build_site(preview = FALSE)'
 
 ## Remaining gates and next action
 
-Changes are prepared locally; no push, release, deployment or submission occurred.
-Next, publish the reviewed branch when authorized and observe its hosted R/OS
-matrix and coverage jobs. For a CRAN target, first choose a release version and
+The original audit prepared local changes; its later source publication did not
+constitute a release, deployment or submission. Observe the hosted R/OS matrix
+and coverage jobs for each subsequent revision. For a CRAN target, first choose a release version and
 resolve/discuss the cellspecR availability and Remotes note, then rerun the checks
 on that exact submission archive. Existing successful hosted runs predate these
 changes. Biological validation, detached workers, native model training/inference,
 QuPath writeback, vendor breadth and production-scale benchmarks remain outside
 this development release, as described above.
+
+## Linux process follow-up — 3 November 2026
+
+Hosted checks exposed a test that reacquired a child handle after the child had
+been reaped. With Linux ps 1.9.3 this raises `os_error`/ENOENT before an identity
+handle exists, rather than the `no_such_process` condition expected by the test.
+The fixture now records PID and creation time while the child is alive and uses
+that identity for the existing survivor checks. It never treats an unrelated
+process reusing the PID as the original child.
+
+Real repeated worker runs then exposed the same snapshot-to-handle race inside
+recursive descendant enumeration. That operation now retries a fresh snapshot
+at most three times for ENOENT only. Previously observed handles are retained;
+persistent ENOENT and other errors still fail. No failure is converted to an
+empty, successful cleanup. The original ps condition is rethrown unchanged.
+
+Validation used a disposable Ubuntu 24.04 aarch64 container with R 4.3.3,
+ps 1.9.3 and processx 3.9.0. The unchanged baseline failed; the repair passed
+five repetitions of all 24 maintenance assertions, including successful and
+failing workers, inherited streams and unrelated-process preservation. Eleven
+new assertions cover a disappearing child, repeated ENOENT on a live parent and
+a permission error. Independent review reran those eleven assertions.
+The macOS package suite and as-CRAN check passed (zero errors/warnings, one
+existing incoming-feasibility note); instrumented coverage was 95.55416%, above
+the existing 95% gate. Exact follow-up logs and source identities are under
+`hosted-followup/bloodspottR/runtime` in the external maintenance evidence.
+Hosted checks for the follow-up commit must still be observed separately.

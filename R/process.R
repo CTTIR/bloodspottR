@@ -15,7 +15,7 @@
                                   cleanup_tree = TRUE)
   owned <- list(process$as_ps_handle())
   remember <- function() {
-    descendants <- tryCatch(ps::ps_children(owned[[1L]], recursive = TRUE),
+    descendants <- tryCatch(.bs_process_children(owned[[1L]]),
       no_such_process = function(e) list())
     candidates <- c(owned, descendants)
     keys <- vapply(candidates, function(p)
@@ -67,4 +67,21 @@
   }
   list(status = process$get_exit_status(), timeout = timed_out,
        stdout = read_log(stdout), stderr = read_log(stderr))
+}
+
+# ps 1.9.3 can expose ENOENT when a child exits between the process snapshot
+# and handle creation. Retry a complete enumeration, never substitute an empty
+# result for that error. Previously observed handles remain in `owned` above.
+.bs_process_children <- function(parent) {
+  for (attempt in seq_len(3L)) {
+    retry <- FALSE
+    children <- tryCatch(ps::ps_children(parent, recursive = TRUE),
+      os_error = function(e) {
+        # Preserve the original ps condition class and errno when rethrowing.
+        if (!identical(e$errno, 2L) || attempt == 3L) base::stop(e)
+        retry <<- TRUE
+        NULL
+      })
+    if (!retry) return(children)
+  }
 }
