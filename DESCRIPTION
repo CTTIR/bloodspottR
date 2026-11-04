@@ -1,7 +1,7 @@
 Package: bloodspottR
 Title: Calibrated Histology Burden and Erythrocyte Profile Analysis
 Version: 0.1.0.9000
-Authors@R: person("R.", "Heller", email = "58561665+r-heller@users.noreply.github.com", role = c("aut", "cre"))
+Authors@R: person("R.", "Heller", email = "raban.heller@uni-ulm.de", role = c("aut", "cre"))
 Description: Tools for physically calibrated histology burden summaries,
  explicit measurement-area accounting, and tissue-aware spatial analysis.
  Supports reproducible development of red-chromogen and erythrocyte-profile
@@ -13,7 +13,7 @@ Depends: R (>= 4.2.0)
 Imports: cli, digest, jsonlite
 Suggests: testthat (>= 3.0.0), sf, spatstat.geom, shiny, processx, ps,
  openxlsx2, cellspecR, knitr, rmarkdown, covr
-Remotes: CTTIR/cellspecR
+Additional_repositories: https://cttir.r-universe.dev
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
