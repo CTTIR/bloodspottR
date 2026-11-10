@@ -23,8 +23,9 @@ This is a new submission.
 ## Test environments
 
 * Local: macOS (aarch64-apple-darwin), R 4.6.1,
-  `R CMD check --as-cran --no-manual` (no LaTeX installation is available
-  locally, so the PDF manual was not built there).
+  `R CMD check --as-cran --no-manual`. The PDF manual was built locally
+  with TinyTeX (TeX Live 2026) via `R CMD Rd2pdf` without errors; the check
+  run itself used `--no-manual`.
 * GitHub Actions (r-lib/actions v2, `--as-cran`): macos-latest (release),
   windows-latest (release), ubuntu-latest (devel, release, oldrel-1), plus an
   informational ubuntu-latest oldrel-3 row.
