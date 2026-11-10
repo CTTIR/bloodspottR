@@ -27,8 +27,9 @@ bs_viewer_example <- function() {
     label = paste(results$slides$organ, "preview"))
   for (i in seq_len(8)) {
     grDevices::png(images$path[i], width = 720, height = 480)
+    old_par <- NULL
     tryCatch({
-      graphics::par(mar = rep(0, 4), xaxs = "i", yaxs = "i")
+      old_par <- graphics::par(mar = rep(0, 4), xaxs = "i", yaxs = "i")
       graphics::plot.new(); graphics::plot.window(c(0, 720), c(480, 0))
       graphics::rect(0, 0, 720, 480, col = "#f5eee7", border = NA)
       graphics::polygon(c(30, 120, 310, 650, 690, 500, 180),
@@ -41,7 +42,10 @@ bs_viewer_example <- function() {
       }
       graphics::text(360, 452, paste("SYNTHETIC", results$slides$organ[i], results$slides$physical_slide_id[i]),
         col = "#563c48", cex = 1.1)
-    }, finally = grDevices::dev.off())
+    }, finally = {
+      if (!is.null(old_par)) graphics::par(old_par)
+      grDevices::dev.off()
+    })
     features <- lapply(seq_len(12), function(j) list(type = "Feature", id = paste0("candidate-", j),
       geometry = list(type = "Point", coordinates = c(85 + (j * 47 + i * 13) %% 530,
                                                      90 + (j * 61 + i * 17) %% 280)),
