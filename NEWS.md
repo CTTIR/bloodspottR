@@ -1,4 +1,10 @@
-# bloodspottR 0.1.0.9000
+# bloodspottR 0.2.0
+
+* Prepare the first CRAN submission: every exported function has a runnable
+  example, the description is phrased as full sentences, `Language: en-US`,
+  the documentation site URL and the bundled 'OpenSeadragon' copyright
+  (`inst/COPYRIGHTS`) are declared, and a spelling wordlist is added.
+* Deploy the pkgdown site with GitHub Pages from a new workflow.
 
 * Retry a fresh descendant snapshot when a child vanishes during Linux process
   enumeration. Preserve observed process identities and propagate repeated or

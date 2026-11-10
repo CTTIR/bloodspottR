@@ -1,6 +1,6 @@
 Package: bloodspottR
 Title: Calibrated Histology Burden and Erythrocyte Profile Analysis
-Version: 0.1.0.9000
+Version: 0.2.0
 Authors@R: person("R.", "Heller", email = "raban.heller@uni-ulm.de", role = c("aut", "cre"))
 Description: Provides tools for physically calibrated histology burden
  summaries, explicit measurement-area accounting, and tissue-aware spatial

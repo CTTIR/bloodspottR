@@ -32,7 +32,7 @@ install **knitr** and **rmarkdown**, make Pandoc available (included with RStudi
 then reinstall with `build_vignettes = TRUE`. Install
 **openxlsx2** for workbook export. For the optional candidate-exchange adapter,
 install **cellspecR** from `CTTIR/cellspecR`. No GPU software is needed to explore
-existing results. The package is a development version and is not on CRAN.
+existing results. The package is not on CRAN yet.
 
 ## Start with an explicit demonstration
 
