@@ -1,3 +1,5 @@
+url: https://cttir.github.io/bloodspottR/
+
 template:
   includes:
     in_header: |
