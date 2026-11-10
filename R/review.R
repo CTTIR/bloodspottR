@@ -9,6 +9,15 @@
 #' @param seed Nonnegative integer sampling seed.
 #' @param out New queue directory.
 #' @return A bs_review_plan object referring to the durable queue.
+#' @examples
+#' root <- tempfile()
+#' dir.create(root)
+#' image <- file.path(root, "image.bin")
+#' writeBin(as.raw(1:10), image)
+#' images <- data.frame(item_id = c("i1", "i2"), parent_id = "p", path = image)
+#' plan <- bs_review_plan(images, budget = 2, out = file.path(root, "queue"))
+#' plan$items
+#' unlink(root, recursive = TRUE)
 #' @export
 bs_review_plan <- function(images, budget = 50L, seed = 1L, out) {
   required <- c("item_id", "parent_id", "path")
@@ -60,6 +69,19 @@ bs_review_plan <- function(images, budget = 50L, seed = 1L, out) {
 #' @param assertions Named list of ery, nuclei and vessel review scopes. Each is
 #'   unreviewed, partial, complete or absent. At least one must be reviewed.
 #' @return A durable receipt, invisibly. Repeating an identical confirmation is idempotent.
+#' @examples
+#' root <- tempfile()
+#' dir.create(root)
+#' image <- file.path(root, "image.bin")
+#' writeBin(as.raw(1:10), image)
+#' images <- data.frame(item_id = c("i1", "i2"), parent_id = "p", path = image)
+#' plan <- bs_review_plan(images, budget = 2, out = file.path(root, "queue"))
+#' points <- file.path(root, "points.csv")
+#' writeLines("class,x,y", points)
+#' receipt <- bs_review_confirm(plan, "i1", points,
+#'   list(ery = "absent", nuclei = "unreviewed", vessel = "unreviewed"))
+#' receipt$n_points
+#' unlink(root, recursive = TRUE)
 #' @export
 bs_review_confirm <- function(plan, item_id, annotations, assertions) {
   if (!inherits(plan, "bs_review_plan") || !is.list(plan) || !is.character(plan$path) ||

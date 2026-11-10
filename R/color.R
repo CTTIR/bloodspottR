@@ -50,8 +50,8 @@ bs_color_features <- function(rgb, white = 255, pseudocount = 1) {
 #' all-pairs distance matrix. Duplicated coordinates and collinear profiles are
 #' supported. Horizontal and vertical extents use the supplied image axes.
 #'
-#' Coordinates must describe the outer profile, not only its annotation centre,
-#' and must already be calibrated in micrometres; apply separate x/y pixel
+#' Coordinates must describe the outer profile, not only its annotation center,
+#' and must already be calibrated in micrometers; apply separate x/y pixel
 #' calibration before use. Sparse boundary sampling can underestimate the true
 #' extent. The explicit upper reference requires slide-specific calibration.
 #' `single_compatible` only means that measured diameter does not exceed that
@@ -59,9 +59,9 @@ bs_color_features <- function(rgb, white = 255, pseudocount = 1) {
 #' or an estimated cell count. Section plane, deformation, overlap and
 #' segmentation error remain unresolved by this measurement.
 #' @param coordinates_um Numeric two-column matrix or data frame, x then y,
-#'   describing one component in micrometres. At least one point is required.
+#'   describing one component in micrometers. At least one point is required.
 #' @param upper_diameter_um Finite positive upper single-profile reference in
-#'   micrometres. There is no universal default.
+#'   micrometers. There is no universal default.
 #' @return One-row data frame with maximum diameter, x/y extents, reference,
 #'   review flag and number of distinct supplied points. Equality to the upper
 #'   reference is classified as single-compatible.

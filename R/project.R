@@ -15,6 +15,11 @@
 #' @param path Project directory.
 #' @param create Whether to create a new project.
 #' @return A `bs_project` handle with its normalized root and manifest.
+#' @examples
+#' path <- file.path(tempdir(), "bloodspottr-example-project")
+#' project <- bs_project(path, create = TRUE)
+#' class(project)
+#' unlink(path, recursive = TRUE)
 #' @export
 bs_project <- function(path, create = FALSE) {
   .bs_scalar_string(path, "path")
@@ -49,6 +54,9 @@ bs_project <- function(path, create = FALSE) {
 #' Inspect analysis state without launching workers
 #' @param x A project or imported result object.
 #' @return A list describing schema, object kind and available results.
+#' @examples
+#' x <- bs_example()
+#' bs_status(x)
 #' @export
 bs_status <- function(x) {
   bs_validate(x)

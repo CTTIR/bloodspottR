@@ -3,6 +3,9 @@
 #' Synthetic measurements for examples and application exploration, never study
 #' data or evidence of model performance.
 #' @return A result list with slides, groups and provenance.
+#' @examples
+#' x <- bs_example()
+#' head(x$slides)
 #' @export
 bs_example <- function() {
   slides <- data.frame(physical_slide_id = sprintf("DEMO-%03d", 1:8),

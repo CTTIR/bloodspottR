@@ -24,3 +24,10 @@ canonical JSON preserves the original strings.
 Comparison run names and excluded slide IDs are saved as comparison_context
 and restored as comparison attributes by bs_import_legacy().
 }
+\examples{
+x <- bs_example()
+out <- tempfile()
+bs_export_results(x, out)
+list.files(out)
+unlink(out, recursive = TRUE)
+}

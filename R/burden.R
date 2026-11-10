@@ -23,11 +23,11 @@ check_nonnegative <- function(x, name, integer = FALSE) {
 #' @param n_spots Nonnegative whole spot counts.
 #' @param red_pixels Nonnegative whole positive-pixel counts within tissue.
 #' @param tissue_pixels Nonnegative whole evaluable-tissue pixel counts.
-#' @param pixel_width_um,pixel_height_um Pixel dimensions in micrometres; either
+#' @param pixel_width_um,pixel_height_um Pixel dimensions in micrometers; either
 #'   one value or one per measurement.
 #' @param n_profiles Optional nonnegative whole counts of resolved profiles.
 #'   Omit when profile counts are unavailable or unsupported.
-#' @return A data frame of areas in square millimetres, counts, fractions and
+#' @return A data frame of areas in square millimeters, counts, fractions and
 #'   densities. The `n_profiles` and `profiles_per_mm2` columns are `NA` when absent.
 #' @export
 #' @examples
@@ -93,6 +93,12 @@ measure_burden <- function(n_spots, red_pixels, tissue_pixels,
 #'   means quality information is unavailable.
 #' @param by Column names defining summaries; defaults to physical slide and organ.
 #' @return One data-frame row per group, with area-weighted fractions and densities.
+#' @examples
+#' m <- measure_burden(c(10, 4), c(200, 80), c(10000, 5000), 0.25, 0.25)
+#' m$physical_slide_id <- "s1"
+#' m$organ <- "liver"
+#' m$physical_area_id <- c("a1", "a2")
+#' aggregate_burden(m)
 #' @export
 aggregate_burden <- function(x, by = c("physical_slide_id", "organ")) {
   reserved <- c("n_measurements", "n_spots", "n_profiles", "red_area_mm2", "tissue_area_mm2",

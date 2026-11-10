@@ -22,6 +22,10 @@
 #'   Native QuPath project files and TissueGnostics acquisition projects need
 #'   image/GeoJSON exports; they are not themselves OpenSlide image formats.
 #' @return A Shiny application object, invisibly when launched.
+#' @examples
+#' x <- bs_example()
+#' app <- bs_app(x, launch = FALSE)
+#' class(app)
 #' @export
 bs_app <- function(results = NULL, launch = interactive(), images = NULL,
                    title = "bloodspottR", group_by = "organ", group_label = "Tissue",

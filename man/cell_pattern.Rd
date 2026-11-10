@@ -9,7 +9,7 @@ cell_pattern(cells, window)
 \arguments{
 \item{cells}{Data frame with unique \code{cell_id} and finite \code{x_um}, \code{y_um} columns.}
 
-\item{window}{A tissue observation window in micrometres from \code{tissue_window()}.}
+\item{window}{A tissue observation window in micrometers from \code{tissue_window()}.}
 }
 \value{
 A marked \code{spatstat.geom} point pattern. Points in holes or outside
@@ -17,4 +17,17 @@ tissue, duplicate IDs and duplicate coordinates produce errors.
 }
 \description{
 Construct a cell point pattern inside observed tissue
+}
+\examples{
+if (requireNamespace("sf", quietly = TRUE) &&
+    requireNamespace("spatstat.geom", quietly = TRUE)) {
+  square <- function(x, y, size) {
+    rbind(c(x, y), c(x + size, y), c(x + size, y + size), c(x, y + size), c(x, y))
+  }
+  # A 10 x 10 um tissue section with a 4 x 4 um hole.
+  geometry <- sf::st_sfc(sf::st_polygon(list(square(0, 0, 10), square(3, 3, 4))))
+  window <- tissue_window(geometry)
+  cells <- data.frame(cell_id = c("a", "b"), x_um = c(1, 8), y_um = c(1, 9))
+  cell_pattern(cells, window)
+}
 }

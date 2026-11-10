@@ -33,3 +33,22 @@ successful exit. Intentionally detached processes are unsupported. Logs are
 limited to 10 MiB per stream. This is not an OS security sandbox.
 No worker is installed or started by this constructor.
 }
+\examples{
+if (requireNamespace("processx", quietly = TRUE)) {
+  root <- tempfile()
+  dir.create(root)
+  # A minimal worker that writes one artifact and a completion record.
+  script <- file.path(root, "worker.R")
+  writeLines(c("a <- commandArgs(TRUE); out <- a[2]",
+    "writeLines('model', file.path(out, 'model.txt'))",
+    paste0("jsonlite::write_json(list(schema_version = 1L, status = 'complete', ",
+           "artifacts = list('model.txt')), file.path(out, 'result.json'), ",
+           "auto_unbox = TRUE)")), script)
+  input <- file.path(root, "input.bin")
+  writeLines("example", input)
+  backend <- bs_backend(file.path(R.home("bin"), "Rscript"), script,
+                        version = "example")
+  backend
+  unlink(root, recursive = TRUE)
+}
+}

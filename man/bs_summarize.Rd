@@ -24,3 +24,7 @@ Rates divide summed numerators by summed tissue area, never average slide
 rates. Missing inputs propagate. Unknown group labels form explicit NA groups.
 Saved control labels are carried without interpreting biological identity.
 }
+\examples{
+x <- bs_example()
+bs_summarize(x, strata = "organ")
+}

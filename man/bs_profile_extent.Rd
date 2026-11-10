@@ -8,10 +8,10 @@ bs_profile_extent(coordinates_um, upper_diameter_um)
 }
 \arguments{
 \item{coordinates_um}{Numeric two-column matrix or data frame, x then y,
-describing one component in micrometres. At least one point is required.}
+describing one component in micrometers. At least one point is required.}
 
 \item{upper_diameter_um}{Finite positive upper single-profile reference in
-micrometres. There is no universal default.}
+micrometers. There is no universal default.}
 }
 \value{
 One-row data frame with maximum diameter, x/y extents, reference,
@@ -26,8 +26,8 @@ all-pairs distance matrix. Duplicated coordinates and collinear profiles are
 supported. Horizontal and vertical extents use the supplied image axes.
 }
 \details{
-Coordinates must describe the outer profile, not only its annotation centre,
-and must already be calibrated in micrometres; apply separate x/y pixel
+Coordinates must describe the outer profile, not only its annotation center,
+and must already be calibrated in micrometers; apply separate x/y pixel
 calibration before use. Sparse boundary sampling can underestimate the true
 extent. The explicit upper reference requires slide-specific calibration.
 \code{single_compatible} only means that measured diameter does not exceed that

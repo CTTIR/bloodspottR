@@ -13,3 +13,5 @@
 ^tools/branding$
 ^pkgdown$
 ^MAINTENANCE\.md$
+^cran-comments\.md$
+^tools$

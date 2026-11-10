@@ -4,8 +4,19 @@
 #' image coordinates with no geographic CRS; the declared unit is explicit.
 #' Overlapping polygons are unioned before conversion.
 #' @param polygons An `sf` or `sfc` object containing valid polygons only.
-#' @param coordinate_unit Either `um` or `mm`; returned coordinates use micrometres.
-#' @return A `spatstat.geom` polygonal observation window in micrometres.
+#' @param coordinate_unit Either `um` or `mm`; returned coordinates use micrometers.
+#' @return A `spatstat.geom` polygonal observation window in micrometers.
+#' @examples
+#' if (requireNamespace("sf", quietly = TRUE) &&
+#'     requireNamespace("spatstat.geom", quietly = TRUE)) {
+#'   square <- function(x, y, size) {
+#'     rbind(c(x, y), c(x + size, y), c(x + size, y + size), c(x, y + size), c(x, y))
+#'   }
+#'   # A 10 x 10 um tissue section with a 4 x 4 um hole.
+#'   geometry <- sf::st_sfc(sf::st_polygon(list(square(0, 0, 10), square(3, 3, 4))))
+#'   window <- tissue_window(geometry)
+#'   window
+#' }
 #' @export
 tissue_window <- function(polygons, coordinate_unit = c("um", "mm")) {
   coordinate_unit <- match.arg(coordinate_unit)
@@ -53,9 +64,21 @@ tissue_window <- function(polygons, coordinate_unit = c("um", "mm")) {
 
 #' Construct a cell point pattern inside observed tissue
 #' @param cells Data frame with unique `cell_id` and finite `x_um`, `y_um` columns.
-#' @param window A tissue observation window in micrometres from `tissue_window()`.
+#' @param window A tissue observation window in micrometers from `tissue_window()`.
 #' @return A marked `spatstat.geom` point pattern. Points in holes or outside
 #'   tissue, duplicate IDs and duplicate coordinates produce errors.
+#' @examples
+#' if (requireNamespace("sf", quietly = TRUE) &&
+#'     requireNamespace("spatstat.geom", quietly = TRUE)) {
+#'   square <- function(x, y, size) {
+#'     rbind(c(x, y), c(x + size, y), c(x + size, y + size), c(x, y + size), c(x, y))
+#'   }
+#'   # A 10 x 10 um tissue section with a 4 x 4 um hole.
+#'   geometry <- sf::st_sfc(sf::st_polygon(list(square(0, 0, 10), square(3, 3, 4))))
+#'   window <- tissue_window(geometry)
+#'   cells <- data.frame(cell_id = c("a", "b"), x_um = c(1, 8), y_um = c(1, 9))
+#'   cell_pattern(cells, window)
+#' }
 #' @export
 cell_pattern <- function(cells, window) {
   if (!requireNamespace("spatstat.geom", quietly = TRUE))

@@ -1,0 +1,9 @@
+bloodspottR bundles the following third-party software. All other files are
+copyright (C) 2026 R. Heller and licensed under the MIT license (see LICENSE).
+
+inst/app/vendor/openseadragon.min.js
+  OpenSeadragon 6.1.1 (http://openseadragon.github.io)
+  Copyright (C) 2009 CodePlex Foundation
+  Copyright (C) 2010-2025 OpenSeadragon contributors
+  License: BSD-3-Clause, reproduced in inst/app/vendor/LICENSE-openseadragon.txt
+  Unminified source: https://github.com/openseadragon/openseadragon/tree/v6.1.1

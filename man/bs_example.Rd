@@ -13,3 +13,7 @@ A result list with slides, groups and provenance.
 Synthetic measurements for examples and application exploration, never study
 data or evidence of model performance.
 }
+\examples{
+x <- bs_example()
+head(x$slides)
+}

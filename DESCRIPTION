@@ -2,13 +2,16 @@ Package: bloodspottR
 Title: Calibrated Histology Burden and Erythrocyte Profile Analysis
 Version: 0.1.0.9000
 Authors@R: person("R.", "Heller", email = "raban.heller@uni-ulm.de", role = c("aut", "cre"))
-Description: Tools for physically calibrated histology burden summaries,
- explicit measurement-area accounting, and tissue-aware spatial analysis.
- Supports reproducible development of red-chromogen and erythrocyte-profile
- workflows. Image-derived candidates require independent validation before
- biological interpretation.
+Description: Provides tools for physically calibrated histology burden
+ summaries, explicit measurement-area accounting, and tissue-aware spatial
+ analysis. Supports reproducible development of red-chromogen and
+ erythrocyte-profile workflows. Image-derived candidates require independent
+ validation before biological interpretation.
 License: MIT + file LICENSE
+Copyright: See file inst/COPYRIGHTS for the bundled 'OpenSeadragon'
+ library.
 Encoding: UTF-8
+Language: en-US
 Depends: R (>= 4.2.0)
 Imports: cli, digest, jsonlite
 Suggests: testthat (>= 3.0.0), sf, spatstat.geom, shiny, processx, ps,
@@ -17,7 +20,8 @@ Additional_repositories: https://cttir.r-universe.dev
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
-Config/roxygen2/version: 8.0.0
-URL: https://github.com/CTTIR/bloodspottR
+Config/roxygen2/version: 8.1.1
+URL: https://github.com/CTTIR/bloodspottR,
+ https://cttir.github.io/bloodspottR/
 BugReports: https://github.com/CTTIR/bloodspottR/issues
 Config/Needs/website: CTTIR/themakR, pkgdown

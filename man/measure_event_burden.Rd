@@ -19,11 +19,11 @@ measure_event_burden(
 
 \item{tissue_pixels}{Nonnegative whole tissue-pixel counts.}
 
-\item{pixel_width_um, pixel_height_um}{Pixel dimensions in micrometres.}
+\item{pixel_width_um, pixel_height_um}{Pixel dimensions in micrometers.}
 }
 \value{
 A data frame with event counts, calibrated areas, positive area
-fraction and percentage, and events per square millimetre. Zero tissue area
+fraction and percentage, and events per square millimeter. Zero tissue area
 yields undefined fractions and densities. This function validates arithmetic,
 not assay performance or single-cell identity.
 }

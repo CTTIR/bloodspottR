@@ -18,3 +18,9 @@ A \code{bs_project} handle with its normalized root and manifest.
 Creation writes a versioned JSON manifest only to a new, empty directory.
 Opening never mutates files and does not start analysis services.
 }
+\examples{
+path <- file.path(tempdir(), "bloodspottr-example-project")
+project <- bs_project(path, create = TRUE)
+class(project)
+unlink(path, recursive = TRUE)
+}

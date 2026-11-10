@@ -81,7 +81,7 @@ backends with representative inputs.
 
 ## Calibrated event exchange with cellspecR
 
-The implemented `bs_as_cellspec()` adapter exchanges candidate centres and image
+The implemented `bs_as_cellspec()` adapter exchanges candidate centers and image
 metadata. A physical slide becomes `sample_id`; no animal or treatment assignment
 is inferred. `event_id` becomes `cell_id` for schema compatibility while
 `object_type = "event_candidate"` and provenance preserve its actual meaning.
@@ -101,9 +101,9 @@ events <- data.frame(
 )
 ```
 
-Coordinates already refer to the declared image frame in micrometres. Pixel
+Coordinates already refer to the declared image frame in micrometers. Pixel
 coordinates divide each axis by its own calibration: anisotropic sampling is
-not forced into a square-pixel assumption. Centres must lie inside half-open
+not forced into a square-pixel assumption. Centers must lie inside half-open
 image extents, image/slide identities must agree, and identifiers remain strings.
 
 ```{r cellspec-optional}

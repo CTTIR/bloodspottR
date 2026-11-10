@@ -9,13 +9,25 @@ tissue_window(polygons, coordinate_unit = c("um", "mm"))
 \arguments{
 \item{polygons}{An \code{sf} or \code{sfc} object containing valid polygons only.}
 
-\item{coordinate_unit}{Either \code{um} or \code{mm}; returned coordinates use micrometres.}
+\item{coordinate_unit}{Either \code{um} or \code{mm}; returned coordinates use micrometers.}
 }
 \value{
-A \code{spatstat.geom} polygonal observation window in micrometres.
+A \code{spatstat.geom} polygonal observation window in micrometers.
 }
 \description{
 Preserves holes and disconnected tissue. Input coordinates must be local
 image coordinates with no geographic CRS; the declared unit is explicit.
 Overlapping polygons are unioned before conversion.
+}
+\examples{
+if (requireNamespace("sf", quietly = TRUE) &&
+    requireNamespace("spatstat.geom", quietly = TRUE)) {
+  square <- function(x, y, size) {
+    rbind(c(x, y), c(x + size, y), c(x + size, y + size), c(x, y + size), c(x, y))
+  }
+  # A 10 x 10 um tissue section with a 4 x 4 um hole.
+  geometry <- sf::st_sfc(sf::st_polygon(list(square(0, 0, 10), square(3, 3, 4))))
+  window <- tissue_window(geometry)
+  window
+}
 }

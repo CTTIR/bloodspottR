@@ -19,3 +19,7 @@ Missing measurements remain missing. Numeric counts must be whole, nonnegative
 doubles no larger than 2^53. Validation checks arithmetic and structure, not
 biological accuracy or geometric independence of slides.
 }
+\examples{
+x <- bs_example()
+bs_validate(x)
+}

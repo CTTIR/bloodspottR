@@ -36,3 +36,10 @@ invent training methods or embed unavailable original images. Print the HTML
 from a browser when a portable PDF is needed. The study-specific full-slide
 TeX renderer remains a separately qualified backend.
 }
+\examples{
+x <- bs_example()
+out <- tempfile()
+report <- bs_report(x, out, title = "Example report")
+basename(report)
+unlink(out, recursive = TRUE)
+}

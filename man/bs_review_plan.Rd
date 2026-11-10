@@ -24,3 +24,13 @@ function never launches or modifies a viewer. Image paths are explicit files;
 each item must have a unique ID and parent-image ID. Queue sampling preserves
 the caller's random-number state.
 }
+\examples{
+root <- tempfile()
+dir.create(root)
+image <- file.path(root, "image.bin")
+writeBin(as.raw(1:10), image)
+images <- data.frame(item_id = c("i1", "i2"), parent_id = "p", path = image)
+plan <- bs_review_plan(images, budget = 2, out = file.path(root, "queue"))
+plan$items
+unlink(root, recursive = TRUE)
+}

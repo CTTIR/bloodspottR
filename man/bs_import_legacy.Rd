@@ -25,3 +25,11 @@ does not impose study-specific groups or thresholds. Saved QC/group metadata
 are preserved rather than inferred from signal. CSV identifiers are read as
 strings, including numeric-looking identifiers with leading zeros.
 }
+\examples{
+x <- bs_example()
+out <- tempfile()
+bs_export_results(x, out)
+restored <- bs_import_legacy(out)
+nrow(restored$slides)
+unlink(out, recursive = TRUE)
+}

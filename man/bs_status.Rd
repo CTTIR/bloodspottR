@@ -15,3 +15,7 @@ A list describing schema, object kind and available results.
 \description{
 Inspect analysis state without launching workers
 }
+\examples{
+x <- bs_example()
+bs_status(x)
+}

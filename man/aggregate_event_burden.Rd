@@ -22,3 +22,10 @@ Sum counts and union areas from disjoint physical measurement regions. The
 caller must resolve overlapping scans and event ownership before aggregation.
 Optional quality flags propagate without excluding compromised measurements.
 }
+\examples{
+e <- measure_event_burden(c(2, 1), c(28, 10), c(64, 40), 0.25, 0.25)
+e$physical_slide_id <- "s1"
+e$organ <- "liver"
+e$physical_area_id <- c("a1", "a2")
+aggregate_event_burden(e)
+}

@@ -23,3 +23,11 @@ support identity, not spatial registration. It never rescales to fabricate a
 common support. \code{union} retains unmatched slides with missing values and
 reports whether comparable support was documented.
 }
+\examples{
+x <- bs_example()
+x$slides$support_id <- x$slides$physical_slide_id
+y <- x
+y$slides <- y$slides[-1, ]
+cmp <- bs_compare(list(first = x, second = y))
+cmp[, c("physical_slide_id", "support_verified", "candidate_spots_delta")]
+}

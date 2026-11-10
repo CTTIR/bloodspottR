@@ -59,7 +59,7 @@ results$slides[, c("physical_slide_id", "organ", "tissue_area_mm2",
 ```
 
 Canonical tables identify physical slides with nonempty character strings, areas
-in square millimetres and nonnegative whole-valued counts. The operational count
+in square millimeters and nonnegative whole-valued counts. The operational count
 is candidate spots plus unresolved bulk events. Counts use numeric storage and
 must remain exactly representable within the documented double-precision bound.
 Existing QC/organ labels are metadata, never inferred from signal strength.

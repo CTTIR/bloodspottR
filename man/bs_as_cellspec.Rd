@@ -23,6 +23,18 @@ A validated cellspec object. Requires the optional cellspecR package.
 \description{
 Preserves candidate identity and class without asserting that an event is one
 cell. No intensity features, channel measurements or cell areas are invented.
-Coordinates must already be in the image frame in micrometres. A physical
+Coordinates must already be in the image frame in micrometers. A physical
 slide is mapped to cellspec's sample_id; no animal identity is inferred.
+}
+\examples{
+events <- data.frame(event_id = c("e1", "e2"), image_id = "img1",
+                     physical_slide_id = "s1", x_um = c(10, 20), y_um = c(5, 15),
+                     event_type = "candidate")
+images <- data.frame(image_id = "img1", physical_slide_id = "s1",
+                     pixel_width_um = 0.25, pixel_height_um = 0.25,
+                     width_px = 400L, height_px = 400L)
+if (requireNamespace("cellspecR", quietly = TRUE)) {
+  cs <- bs_as_cellspec(events, images)
+  class(cs)
+}
 }

@@ -50,3 +50,8 @@ reads retain the previous measurements. It never changes source files.
 Native QuPath project files and TissueGnostics acquisition projects need
 image/GeoJSON exports; they are not themselves OpenSlide image formats.
 }
+\examples{
+x <- bs_example()
+app <- bs_app(x, launch = FALSE)
+class(app)
+}

@@ -20,14 +20,14 @@ measure_burden(
 
 \item{tissue_pixels}{Nonnegative whole evaluable-tissue pixel counts.}
 
-\item{pixel_width_um, pixel_height_um}{Pixel dimensions in micrometres; either
+\item{pixel_width_um, pixel_height_um}{Pixel dimensions in micrometers; either
 one value or one per measurement.}
 
 \item{n_profiles}{Optional nonnegative whole counts of resolved profiles.
 Omit when profile counts are unavailable or unsupported.}
 }
 \value{
-A data frame of areas in square millimetres, counts, fractions and
+A data frame of areas in square millimeters, counts, fractions and
 densities. The \code{n_profiles} and \code{profiles_per_mm2} columns are \code{NA} when absent.
 }
 \description{

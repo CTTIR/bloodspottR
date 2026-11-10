@@ -29,3 +29,10 @@ Optional \code{qc_flags} are carried into the report without filtering measureme
 or changing denominators. Compromised input is processed like other input;
 flags describe interpretation limits rather than validating the counts.
 }
+\examples{
+m <- measure_burden(c(10, 4), c(200, 80), c(10000, 5000), 0.25, 0.25)
+m$physical_slide_id <- "s1"
+m$organ <- "liver"
+m$physical_area_id <- c("a1", "a2")
+aggregate_burden(m)
+}

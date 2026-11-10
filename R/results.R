@@ -50,6 +50,9 @@
 #' @param x A project, imported result, or canonical slide data frame.
 #' @param level Currently `"structure"` only.
 #' @return Invisibly `TRUE`, or an informative error.
+#' @examples
+#' x <- bs_example()
+#' bs_validate(x)
 #' @export
 bs_validate <- function(x, level = "structure") {
   if (!identical(level, "structure")) .bs_abort("Only structure validation is supported", call. = FALSE)
@@ -96,6 +99,13 @@ bs_validate <- function(x, level = "structure") {
 #' @return A `bs_result` object with canonical slide measurements, source SHA-256
 #'   identity, and available saved metadata. SHA-256 is an integrity receipt, not an
 #'   authenticity guarantee.
+#' @examples
+#' x <- bs_example()
+#' out <- tempfile()
+#' bs_export_results(x, out)
+#' restored <- bs_import_legacy(out)
+#' nrow(restored$slides)
+#' unlink(out, recursive = TRUE)
 #' @export
 bs_import_legacy <- function(path, profile = "p079") {
   .bs_scalar_string(path, "path")
@@ -167,6 +177,9 @@ bs_import_legacy <- function(path, profile = "p079") {
 #'   cannot replace measurements. The source object is not modified.
 #' @return Data frame with summed measurements, pooled rates, slide counts and
 #'   a list column `slide_ids`. Only observed combinations are returned.
+#' @examples
+#' x <- bs_example()
+#' bs_summarize(x, strata = "organ")
 #' @export
 bs_summarize <- function(x, strata = NULL, qc_revision = NULL) {
   bs_validate(x)
@@ -229,6 +242,13 @@ bs_summarize <- function(x, strata = NULL, qc_revision = NULL) {
 #' @return Data frame with baseline/run values, second-minus-first differences
 #'   and `support_verified`. Run names and excluded IDs are attributes, preserved
 #'   by bs_export_results() and bs_import_legacy() through comparison_context.
+#' @examples
+#' x <- bs_example()
+#' x$slides$support_id <- x$slides$physical_slide_id
+#' y <- x
+#' y$slides <- y$slides[-1, ]
+#' cmp <- bs_compare(list(first = x, second = y))
+#' cmp[, c("physical_slide_id", "support_verified", "candidate_spots_delta")]
 #' @export
 bs_compare <- function(runs, support = "common") {
   support <- match.arg(support, c("common", "union"))

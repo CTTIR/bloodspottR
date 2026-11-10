@@ -25,3 +25,17 @@ exported CSV. It does not click Save in QuPath or infer completeness from an
 empty file. A header-only CSV is accepted only with explicit scope assertions.
 Parent coordinates must already be supplied by the review client's adapter.
 }
+\examples{
+root <- tempfile()
+dir.create(root)
+image <- file.path(root, "image.bin")
+writeBin(as.raw(1:10), image)
+images <- data.frame(item_id = c("i1", "i2"), parent_id = "p", path = image)
+plan <- bs_review_plan(images, budget = 2, out = file.path(root, "queue"))
+points <- file.path(root, "points.csv")
+writeLines("class,x,y", points)
+receipt <- bs_review_confirm(plan, "i1", points,
+  list(ery = "absent", nuclei = "unreviewed", vessel = "unreviewed"))
+receipt$n_points
+unlink(root, recursive = TRUE)
+}

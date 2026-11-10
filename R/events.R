@@ -8,9 +8,9 @@
 #' @param n_events Nonnegative whole event counts within tissue.
 #' @param red_pixels Nonnegative whole counts of union positive pixels in tissue.
 #' @param tissue_pixels Nonnegative whole tissue-pixel counts.
-#' @param pixel_width_um,pixel_height_um Pixel dimensions in micrometres.
+#' @param pixel_width_um,pixel_height_um Pixel dimensions in micrometers.
 #' @return A data frame with event counts, calibrated areas, positive area
-#'   fraction and percentage, and events per square millimetre. Zero tissue area
+#'   fraction and percentage, and events per square millimeter. Zero tissue area
 #'   yields undefined fractions and densities. This function validates arithmetic,
 #'   not assay performance or single-cell identity.
 #' @export
@@ -39,6 +39,12 @@ measure_event_burden <- function(n_events, red_pixels, tissue_pixels,
 #' @param by Grouping columns; defaults to physical slide and organ.
 #' @return Slide-level sums, area-weighted positive fraction and percentage,
 #'   event density, and retained quality flags. No animal/group inference.
+#' @examples
+#' e <- measure_event_burden(c(2, 1), c(28, 10), c(64, 40), 0.25, 0.25)
+#' e$physical_slide_id <- "s1"
+#' e$organ <- "liver"
+#' e$physical_area_id <- c("a1", "a2")
+#' aggregate_event_burden(e)
 #' @export
 aggregate_event_burden <- function(x, by = c("physical_slide_id", "organ")) {
   if (!is.data.frame(x) || !"n_events" %in% names(x))

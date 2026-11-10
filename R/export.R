@@ -10,6 +10,12 @@
 #' @param out A new output directory.
 #' @param xlsx Include an Excel workbook (requires openxlsx2).
 #' @return The normalized delivery directory, invisibly.
+#' @examples
+#' x <- bs_example()
+#' out <- tempfile()
+#' bs_export_results(x, out)
+#' list.files(out)
+#' unlink(out, recursive = TRUE)
 #' @export
 bs_export_results <- function(results, out, xlsx = FALSE) {
   .bs_export_check(results, out)
@@ -129,6 +135,12 @@ bs_export_results <- function(results, out, xlsx = FALSE) {
 #' @param background Curated background text, treated as plain text.
 #' @param xlsx Include the workbook.
 #' @return The report path, invisibly.
+#' @examples
+#' x <- bs_example()
+#' out <- tempfile()
+#' report <- bs_report(x, out, title = "Example report")
+#' basename(report)
+#' unlink(out, recursive = TRUE)
 #' @export
 bs_report <- function(results, out, title = "Histology burden report",
                        author = "", background = "", xlsx = FALSE) {
