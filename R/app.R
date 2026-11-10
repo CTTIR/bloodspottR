@@ -24,8 +24,10 @@
 #' @return A Shiny application object, invisibly when launched.
 #' @examples
 #' x <- bs_example()
-#' app <- bs_app(x, launch = FALSE)
-#' class(app)
+#' if (requireNamespace("shiny", quietly = TRUE)) {
+#'   app <- bs_app(x, launch = FALSE)
+#'   class(app)
+#' }
 #' @export
 bs_app <- function(results = NULL, launch = interactive(), images = NULL,
                    title = "bloodspottR", group_by = "organ", group_label = "Tissue",

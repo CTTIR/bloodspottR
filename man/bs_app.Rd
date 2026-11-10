@@ -52,6 +52,8 @@ image/GeoJSON exports; they are not themselves OpenSlide image formats.
 }
 \examples{
 x <- bs_example()
-app <- bs_app(x, launch = FALSE)
-class(app)
+if (requireNamespace("shiny", quietly = TRUE)) {
+  app <- bs_app(x, launch = FALSE)
+  class(app)
+}
 }
