@@ -34,6 +34,8 @@ densities. The \code{n_profiles} and \code{profiles_per_mm2} columns are \code{N
 Inputs must already refer to the same evaluable tissue mask. This function
 checks units and arithmetic; it does not validate image segmentation.
 Zero evaluable area produces undefined densities, represented by \code{NA}.
+Counts and pixel dimensions must be plain integer/double vectors without
+classes or dimensions; matrix columns are not flattened into measurements.
 }
 \examples{
 measure_burden(10, 200, 10000, 0.25, 0.25)

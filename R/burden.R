@@ -1,5 +1,8 @@
-check_nonnegative <- function(x, name, integer = FALSE) {
-  if (!is.numeric(x) || anyNA(x) || any(!is.finite(x)) || any(x < 0))
+check_nonnegative <- function(x, name, integer = FALSE, allow_na = FALSE) {
+  if (!typeof(x) %in% c("integer", "double") || is.object(x) || !is.null(dim(x)))
+    .bs_abort(name, " must be a plain integer/double vector without dimensions", call. = FALSE)
+  if (allow_na) x <- x[!is.na(x)]
+  if (anyNA(x) || any(!is.finite(x)) || any(x < 0))
     .bs_abort(name, " must be finite nonnegative numbers", call. = FALSE)
   if (integer && any(x != floor(x) | x > 2^53))
     .bs_abort(name, " must contain exact whole counts no larger than 2^53", call. = FALSE)
@@ -20,6 +23,8 @@ check_nonnegative <- function(x, name, integer = FALSE) {
 #' Inputs must already refer to the same evaluable tissue mask. This function
 #' checks units and arithmetic; it does not validate image segmentation.
 #' Zero evaluable area produces undefined densities, represented by `NA`.
+#' Counts and pixel dimensions must be plain integer/double vectors without
+#' classes or dimensions; matrix columns are not flattened into measurements.
 #' @param n_spots Nonnegative whole spot counts.
 #' @param red_pixels Nonnegative whole positive-pixel counts within tissue.
 #' @param tissue_pixels Nonnegative whole evaluable-tissue pixel counts.
@@ -86,6 +91,9 @@ measure_burden <- function(n_spots, red_pixels, tissue_pixels,
 #' Optional `qc_flags` are carried into the report without filtering measurements
 #' or changing denominators. Compromised input is processed like other input;
 #' flags describe interpretation limits rather than validating the counts.
+#' Measurement columns must be plain integer/double vectors with one value per
+#' row. Grouping/area IDs and quality flags must also be dimensionless vectors;
+#' matrices and nested columns are rejected before grouping or summation.
 #' @param x Data frame containing grouping columns, `physical_area_id`,
 #'   `n_spots`, `n_profiles`, `red_area_mm2`, and `tissue_area_mm2`.
 #'   An optional character `qc_flags` column contains semicolon-separated flags;
@@ -107,8 +115,13 @@ aggregate_burden <- function(x, by = c("physical_slide_id", "organ")) {
   if (any(by %in% reserved)) .bs_abort("Grouping columns conflict with generated metrics", call. = FALSE)
   needed <- c(by, "physical_area_id", "n_spots", "n_profiles", "red_area_mm2", "tissue_area_mm2")
   if (!is.data.frame(x) || anyDuplicated(names(x)) || !nrow(x) || !is.character(by) || !length(by) ||
-      anyDuplicated(by) || !all(needed %in% names(x)))
+      !is.null(dim(by)) || anyNA(by) || anyDuplicated(by) || !all(needed %in% names(x)))
     .bs_abort("A nonempty measurement table with all required columns is needed", call. = FALSE)
+  for (name in unique(c(by, "physical_area_id"))) {
+    value <- x[[name]]
+    if (!is.atomic(value) || !is.null(dim(value)) || length(value) != nrow(x))
+      .bs_abort(name, " must be a dimensionless identifier vector with one value per measurement", call. = FALSE)
+  }
   if (anyNA(x[c(by, "physical_area_id")]) || any(!nzchar(as.character(x$physical_area_id))) ||
       any(vapply(x[by], function(z) any(!nzchar(as.character(z))), logical(1))))
     .bs_abort("Grouping and physical-area identifiers must be known", call. = FALSE)
@@ -116,9 +129,10 @@ aggregate_burden <- function(x, by = c("physical_slide_id", "organ")) {
     .bs_abort("Duplicate physical_area_id; resolve repeated or overlapping measurements", call. = FALSE)
   for (name in c("n_spots", "red_area_mm2", "tissue_area_mm2"))
     check_nonnegative(x[[name]], name, name == "n_spots")
-  check_nonnegative(x$n_profiles[!is.na(x$n_profiles)], "n_profiles", TRUE)
-  if ("qc_flags" %in% names(x) && !is.character(x$qc_flags))
-    .bs_abort("qc_flags must be a character column", call. = FALSE)
+  check_nonnegative(x$n_profiles, "n_profiles", TRUE, allow_na = TRUE)
+  if ("qc_flags" %in% names(x) && (!is.character(x$qc_flags) ||
+      !is.null(dim(x$qc_flags)) || length(x$qc_flags) != nrow(x)))
+    .bs_abort("qc_flags must be a dimensionless character column with one value per measurement", call. = FALSE)
   if (any(x$red_area_mm2 > x$tissue_area_mm2) ||
       any(x$red_area_mm2 == 0 & (x$n_spots > 0 | (!is.na(x$n_profiles) & x$n_profiles > 0))))
     .bs_abort("Inconsistent tissue area or object counts", call. = FALSE)

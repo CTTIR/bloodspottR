@@ -28,6 +28,9 @@ A slide summary does not establish an independent biological replicate.
 Optional \code{qc_flags} are carried into the report without filtering measurements
 or changing denominators. Compromised input is processed like other input;
 flags describe interpretation limits rather than validating the counts.
+Measurement columns must be plain integer/double vectors with one value per
+row. Grouping/area IDs and quality flags must also be dimensionless vectors;
+matrices and nested columns are rejected before grouping or summation.
 }
 \examples{
 m <- measure_burden(c(10, 4), c(200, 80), c(10000, 5000), 0.25, 0.25)

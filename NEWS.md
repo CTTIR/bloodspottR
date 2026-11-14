@@ -1,5 +1,7 @@
 # bloodspottR 0.2.0
 
+* Calibrated burden and pooled summaries reject dimensioned or classed numeric measurements before arithmetic. Matrix count/area columns can no longer multiply counts or denominators while leaving the measurement count unchanged; grouping IDs and quality flags also require one value per row. Valid calibration, exact-count limits and missing-profile propagation are unchanged.
+
 * Prepare the first CRAN submission: every exported function has a runnable
   example, the description is phrased as full sentences, `Language: en-US`,
   the documentation site URL and the bundled 'OpenSeadragon' copyright
