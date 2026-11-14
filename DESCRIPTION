@@ -14,7 +14,7 @@ Encoding: UTF-8
 Language: en-US
 Depends: R (>= 4.2.0)
 Imports: cli, digest, jsonlite, rlang
-Suggests: testthat (>= 3.0.0), sf, spatstat.geom, shiny, processx, ps,
+Suggests: testthat (>= 3.1.7), sf, spatstat.geom, shiny, processx, ps,
  openxlsx2, cellspecR, knitr, rmarkdown, covr
 Additional_repositories: https://cttir.r-universe.dev
 VignetteBuilder: knitr
