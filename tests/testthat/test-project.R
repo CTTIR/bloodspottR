@@ -17,3 +17,29 @@ test_that("project creation is portable, explicit and nondestructive", {
   expect_error(bs_project(f, TRUE), "not a directory")
   expect_equal(readLines(f), "keep")
 })
+
+test_that("project creation reports unusable locations and rejects foreign manifests", {
+  skip_if_not_installed("jsonlite")
+  blocker <- tempfile(); writeLines("keep", blocker); on.exit(unlink(blocker))
+  nested <- file.path(blocker, "project")
+  expect_error(suppressWarnings(bs_project(nested, create = TRUE)),
+               "Could not create project directory")
+  expect_identical(readLines(blocker), "keep")
+  for (path in list("", c("a", "b"), 1, NULL)) expect_error(bs_project(path), "nonempty string")
+  expect_error(bs_project(tempfile(), create = "yes"), "TRUE or FALSE")
+  root <- tempfile(); dir.create(root); on.exit(unlink(root, recursive = TRUE), add = TRUE)
+  project <- bs_project(root, create = TRUE)
+  expect_identical(project$path, normalizePath(root))
+  expect_identical(project$manifest$project_id, basename(normalizePath(root)))
+  expect_identical(project$manifest$scientific_status, "exploratory")
+  expect_identical(list.files(root, all.files = TRUE, no.. = TRUE), "bloodspottr-project.json")
+  status <- bs_status(project)
+  expect_identical(status$kind, "project")
+  expect_identical(status$schema_version, "1.0")
+  manifest <- file.path(root, "bloodspottr-project.json")
+  for (project_id in list("", c("a", "b"), 7)) {
+    jsonlite::write_json(list(schema_version = "1.0", project_id = project_id), manifest,
+                         auto_unbox = length(project_id) == 1L)
+    expect_error(bs_project(root), "Invalid or unsupported project manifest")
+  }
+})
