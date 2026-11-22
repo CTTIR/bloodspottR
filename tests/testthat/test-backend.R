@@ -80,3 +80,111 @@ test_that("timeout cleans owned child processes without killing unrelated jobs",
   expect_false(running)
   expect_true(unrelated$is_alive())
 })
+
+test_that("backend specifications reject malformed commands, arguments and handles", {
+  rscript <- file.path(R.home("bin"), "Rscript")
+  expect_error(bs_backend(c(rscript, rscript), version = "1"), "one executable")
+  expect_error(bs_backend("", version = "1"), "one executable")
+  expect_error(bs_backend(rscript, args = 1, version = "1"), "args must be character")
+  expect_error(bs_backend(rscript, args = NA_character_, version = "1"), "args must be character")
+  expect_error(bs_backend(R.home("bin"), version = "1"), "not found")
+  expect_error(bs_backend(rscript, version = "1", operations = "Train"), "unique operation names")
+  input <- tempfile(); writeLines("original", input); on.exit(unlink(input))
+  out <- tempfile()
+  expect_error(bs_run_backend(list(command = rscript), "train", c(image = input), out = out),
+               "Expected a bs_backend")
+  forged <- structure(list(command = rscript, args = character(), version = "",
+                           operations = "train"), class = "bs_backend")
+  expect_error(bs_run_backend(forged, "train", c(image = input), out = out), "version")
+  expect_false(file.exists(out))
+})
+
+test_that("worker parameters must be JSON-compatible before any process starts", {
+  f <- worker_fixture('stop("the worker must not start")')
+  on.exit(unlink(f$root, recursive = TRUE))
+  out <- file.path(f$root, "job")
+  rejected <- list(list(a = Inf), list(a = NA_real_), list(a = NA_character_),
+                   list(a = factor("x")), list(a = 1i), list(a = sum),
+                   list(a = list(b = 1, b = 2)), list(a = list(1, list(NaN))))
+  for (parameters in rejected) {
+    expect_error(bs_train(c(image = f$input), f$backend, out, parameters = parameters),
+                 "finite JSON-compatible")
+  }
+  expect_error(bs_train(c(image = f$input), f$backend, out, parameters = "a"), "named list")
+  expect_error(bs_train(c(image = f$input), f$backend, out, parameters = list(1)), "named list")
+  expect_error(bs_train(c(image = f$input), f$backend, out, timeout = 0), "positive")
+  expect_false(file.exists(out))
+  expect_length(list.files(f$root, pattern = "bloodspottr-worker", all.files = TRUE), 0)
+})
+
+test_that("nested and explicitly null parameters reach the worker unchanged", {
+  skip_if_not_installed("processx")
+  f <- worker_fixture(c(
+    'writeLines(as.character(request$parameters$nested$depth), file.path(out, "model.txt"))',
+    worker_complete[2]))
+  on.exit(unlink(f$root, recursive = TRUE))
+  out <- file.path(f$root, "job")
+  parameters <- list(threshold = NULL, nested = list(depth = 3L, labels = c("a", "b")),
+                     flags = list(TRUE, "x", 0.5))
+  job <- bs_analyze(c(image = f$input), f$backend, out, parameters = parameters)
+  expect_identical(job$operation, "analyze")
+  expect_identical(job$request$parameters, parameters)
+  expect_identical(readLines(file.path(out, "model.txt")), "3")
+  expect_identical(job$output, normalizePath(out, winslash = "/"))
+})
+
+test_that("incomplete worker contracts are rejected without publishing output", {
+  skip_if_not_installed("processx")
+  result <- function(fields) paste0("jsonlite::write_json(list(", fields,
+    '),file.path(out,"result.json"),auto_unbox=TRUE)')
+  cases <- list(
+    list(code = "invisible(NULL)", error = "did not produce result.json"),
+    list(code = 'dir.create(file.path(out,"result.json"))',
+         error = "did not produce result.json"),
+    list(code = c(worker_complete[1],
+                  result('schema_version=1,status="failed",artifacts=list("model.txt")')),
+         error = "completion contract"),
+    list(code = c(worker_complete[1],
+                  result('schema_version=2,status="complete",artifacts=list("model.txt")')),
+         error = "completion contract"),
+    list(code = result('schema_version=1,status="complete",artifacts=list()'),
+         error = "nonempty array"),
+    list(code = c(worker_complete[1],
+                  result('schema_version=1,status="complete",artifacts=list(model="model.txt")')),
+         error = "nonempty array"),
+    list(code = result('schema_version=1,status="complete",artifacts=list("absent.txt")'),
+         error = "artifacts are missing"),
+    list(code = c('dir.create(file.path(out,"folder"))',
+                  result('schema_version=1,status="complete",artifacts=list("folder")')),
+         error = "artifacts are missing"),
+    list(code = c(worker_complete[1],
+                  result('schema_version=1,status="complete",artifacts=list("model.txt","model.txt")')),
+         error = "paths are invalid"),
+    list(code = c('writeLines("{}",a[1])', worker_complete),
+         error = "changed the request manifest"),
+    list(code = c("unlink(a[1])", worker_complete),
+         error = "changed the request manifest"))
+  for (case in cases) {
+    f <- worker_fixture(case$code)
+    out <- file.path(f$root, "job")
+    expect_error(bs_train(c(image = f$input), f$backend, out), case$error)
+    expect_false(file.exists(out))
+    expect_length(list.files(f$root, pattern = "bloodspottr-worker", all.files = TRUE), 0)
+    expect_identical(readLines(f$input), "original")
+    unlink(f$root, recursive = TRUE)
+  }
+})
+
+test_that("worker failures report standard error and oversized logs are refused", {
+  skip_if_not_installed("processx")
+  f <- worker_fixture('stop("model weights are unreadable")')
+  on.exit(unlink(f$root, recursive = TRUE), add = TRUE)
+  expect_error(bs_train(c(image = f$input), f$backend, file.path(f$root, "job")),
+               "model weights are unreadable")
+  noisy <- worker_fixture(c('chunk <- strrep("x", 1024^2)',
+                            "for (i in 1:11) cat(chunk)", worker_complete))
+  on.exit(unlink(noisy$root, recursive = TRUE), add = TRUE)
+  out <- file.path(noisy$root, "job")
+  expect_error(bs_train(c(image = noisy$input), noisy$backend, out), "log exceeds 10 MiB")
+  expect_false(file.exists(out))
+})
