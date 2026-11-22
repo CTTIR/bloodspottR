@@ -100,7 +100,7 @@ test_that("backend specifications reject malformed commands, arguments and handl
 })
 
 test_that("worker parameters must be JSON-compatible before any process starts", {
-  f <- worker_fixture('stop("the worker must not start")')
+  f <- worker_fixture('writeLines("started", file.path(dirname(a[2]), "started"))')
   on.exit(unlink(f$root, recursive = TRUE))
   out <- file.path(f$root, "job")
   rejected <- list(list(a = Inf), list(a = NA_real_), list(a = NA_character_),
@@ -114,6 +114,7 @@ test_that("worker parameters must be JSON-compatible before any process starts",
   expect_error(bs_train(c(image = f$input), f$backend, out, parameters = list(1)), "named list")
   expect_error(bs_train(c(image = f$input), f$backend, out, timeout = 0), "positive")
   expect_false(file.exists(out))
+  expect_false(file.exists(file.path(f$root, "started")))
   expect_length(list.files(f$root, pattern = "bloodspottr-worker", all.files = TRUE), 0)
 })
 
@@ -177,7 +178,7 @@ test_that("incomplete worker contracts are rejected without publishing output", 
 
 test_that("worker failures report standard error and oversized logs are refused", {
   skip_if_not_installed("processx")
-  f <- worker_fixture('stop("model weights are unreadable")')
+  f <- worker_fixture(c('message("model weights are unreadable")', "quit(status = 4)"))
   on.exit(unlink(f$root, recursive = TRUE), add = TRUE)
   expect_error(bs_train(c(image = f$input), f$backend, file.path(f$root, "job")),
                "model weights are unreadable")
