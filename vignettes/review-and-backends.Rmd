@@ -55,7 +55,7 @@ grDevices::png(image, width = 200, height = 200)
 par(mar = rep(0, 4))
 plot.new()
 text(.5, .5, "Synthetic empty field")
-grDevices::dev.off()
+invisible(grDevices::dev.off())
 queue <- bs_review_plan(
   data.frame(item_id = "field-1", parent_id = "slide-1", path = image),
   budget = 50, seed = 41, out = file.path(work, "review")
