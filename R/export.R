@@ -111,10 +111,20 @@ bs_export_results <- function(results, out, xlsx = FALSE) {
   x
 }
 
+# Presentation only: whole numbers are written out in full and other doubles
+# are rounded to six significant digits. CSV and JSON keep 15 significant digits.
+.bs_display_number <- function(v) {
+  if (!is.double(v) || is.object(v)) return(as.character(v))
+  text <- as.character(signif(v, 6L))
+  whole <- !is.na(v) & is.finite(v) & v == floor(v) & abs(v) <= 2^53
+  text[whole] <- sprintf("%.0f", v[whole])
+  text
+}
+
 .bs_html_table <- function(x) {
   if (!nrow(x)) return("<p>No rows in this table.</p>")
   x <- .bs_flat_table(x)
-  x[] <- lapply(x, function(v) { v <- as.character(v); v[is.na(v)] <- "Not available"; v })
+  x[] <- lapply(x, function(v) { v <- .bs_display_number(v); v[is.na(v)] <- "Not available"; v })
   rows <- apply(x, 1L, function(r) paste0("<tr>", paste0("<td>", .bs_html(r), "</td>", collapse = ""), "</tr>"))
   paste0("<div class='table-scroll'><table><thead><tr>",
     paste0("<th scope='col'>", .bs_html(names(x)), "</th>", collapse = ""),
@@ -187,7 +197,8 @@ bs_report <- function(results, out, title = "Histology burden report",
     "<section><h2>Methods and provenance</h2><pre>", .bs_html(provenance), "</pre></section>",
     "<section><h2>Data</h2><p><a href='results.json'>Canonical results</a> \u00b7 ",
     "<a href='Slides.csv'>Slide CSV</a> \u00b7 <a href='SHA256SUMS'>Checksums</a></p>",
-    "<p>These are summary tables. Images, pixel masks, individual events and training weights are not embedded.</p></section></main></body></html>")
+    "<p>These are summary tables. Images, pixel masks, individual events and training weights are not embedded. ",
+    "Displayed non-integer values are rounded to six significant digits; the linked files keep 15 significant digits.</p></section></main></body></html>")
   writeLines(html, file.path(stage, "report.html"), useBytes = TRUE)
   unlink(file.path(stage, "SHA256SUMS"))
   .bs_manifest(stage)

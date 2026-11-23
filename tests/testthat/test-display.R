@@ -35,6 +35,27 @@ test_that("overview colors are distinct for common group counts", {
   expect_identical(anyDuplicated(combos), 0L)
 })
 
+test_that("report tables round rates for display but keep whole counts exact", {
+  expect_identical(.bs_display_number(c(1.4444444444444444, 0.65, NA, 45, 2^53, 0)),
+                   c("1.44444", "0.65", NA, "45", "9007199254740992", "0"))
+  expect_identical(.bs_display_number(c("a", NA)), c("a", NA))
+  expect_identical(.bs_display_number(c(TRUE, NA)), c("TRUE", NA))
+  expect_identical(.bs_display_number(3L), "3")
+  x <- bs_example()
+  x$groups <- bs_summarize(x, strata = "organ")
+  out <- tempfile("bs-report-")
+  on.exit(unlink(out, recursive = TRUE), add = TRUE)
+  html <- paste(readLines(bs_report(x, out)), collapse = "\n")
+  expect_match(html, "<td>1.44444</td>", fixed = TRUE)
+  expect_false(grepl("1.4444444", html, fixed = TRUE))
+  expect_match(html, "six significant digits", fixed = TRUE)
+  # Machine-readable outputs keep 15 significant digits.
+  restored <- bs_import_legacy(file.path(out, "results.json"))
+  expect_equal(restored$groups$red_percent[1], x$groups$red_percent[1], tolerance = 1e-14)
+  csv <- utils::read.csv(file.path(out, "Groups.csv"))
+  expect_equal(csv$red_percent[1], x$groups$red_percent[1], tolerance = 1e-14)
+})
+
 test_that("the slide table shows whole counts without decimals", {
   d <- .bs_app_results(bs_example())$slides
   shown <- .bs_app_table(d)
