@@ -208,8 +208,8 @@ For the two liver slides above, the red-positive percentage is
 `(10 + 0) / (1 + 9) = 1/mm²`. The unweighted mean of their percentages would be 5%,
 which answers a different question.
 
-```{r weighted-example, fig.width=6, fig.height=3.2, fig.alt="Two bars compare the correct pooled liver red-positive percentage of one percent with the unweighted mean of five percent."}
-old <- par(mar = c(5, 4, 1, 1))
+```{r weighted-example, fig.width=6, fig.height=3, fig.alt="Two bars compare the correct pooled liver red-positive percentage of one percent with the unweighted mean of five percent."}
+old <- par(mar = c(2.5, 4, 1, 1))
 barplot(c("Pooled by tissue area" = 1, "Unweighted slide mean" = 5),
         col = c("#185FA5", "#A3ADB5"), ylab = "Red-positive tissue (%)",
         ylim = c(0, 6), las = 1, border = NA)
