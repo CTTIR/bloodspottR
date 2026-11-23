@@ -8,9 +8,9 @@
 #' @param n_events Nonnegative whole event counts within tissue.
 #' @param red_pixels Nonnegative whole counts of union positive pixels in tissue.
 #' @param tissue_pixels Nonnegative whole tissue-pixel counts.
-#' @param pixel_width_um,pixel_height_um Pixel dimensions in micrometers.
+#' @param pixel_width_um,pixel_height_um Pixel dimensions in micrometres.
 #' @return A data frame with event counts, calibrated areas, positive area
-#'   fraction and percentage, and events per square millimeter. Zero tissue area
+#'   fraction and percentage, and events per square millimetre. Zero tissue area
 #'   yields undefined fractions and densities. This function validates arithmetic,
 #'   not assay performance or single-cell identity.
 #' @export

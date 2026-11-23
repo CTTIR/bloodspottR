@@ -2,7 +2,7 @@
 #'
 #' The explicitly trusted executable receives two final arguments: a JSON request
 #' path and an output staging directory. It must write result.json with
-#' schema_version 1, status 'complete', and a nonempty artifacts array of relative
+#' schema_version 1, status 'complete', and a nonempty `artifacts` array of relative
 #' file paths. A subprocess is isolated and cleaned up after completion or timeout.
 #' Workers must keep helpers attached to their ancestry and join them before
 #' successful exit. Intentionally detached processes are unsupported. Logs are
@@ -11,13 +11,13 @@
 #' @param command Path or PATH name of a trusted executable.
 #' @param args Character arguments preceding the request/output paths.
 #' @param version Explicit worker version or source commit identifier.
-#' @param operations Supported operations, such as train or analyze.
+#' @param operations Supported operations, such as `train` or `analyze`.
 #' @return A bs_backend specification.
 #' @examples
 #' if (requireNamespace("processx", quietly = TRUE)) {
 #'   root <- tempfile()
 #'   dir.create(root)
-#'   # A minimal worker that writes one artifact and a completion record.
+#'   # A minimal worker that writes one artefact and a completion record.
 #'   script <- file.path(root, "worker.R")
 #'   writeLines(c("a <- commandArgs(TRUE); out <- a[2]",
 #'     "writeLines('model', file.path(out, 'model.txt'))",
@@ -52,7 +52,7 @@ bs_backend <- function(command, args = character(), version,
 #' @param backend A bs_backend object.
 #' @param operation A supported operation name.
 #' @param inputs Named character vector of existing input files.
-#' @param parameters Named list of JSON-serializable worker settings.
+#' @param parameters Named list of JSON-serialisable worker settings.
 #' @param out New output directory. It is committed only after validation.
 #' @param timeout Maximum elapsed seconds for the worker.
 #' @return A job receipt with status, backend, input hashes and output hashes.
@@ -60,7 +60,7 @@ bs_backend <- function(command, args = character(), version,
 #' if (requireNamespace("processx", quietly = TRUE)) {
 #'   root <- tempfile()
 #'   dir.create(root)
-#'   # A minimal worker that writes one artifact and a completion record.
+#'   # A minimal worker that writes one artefact and a completion record.
 #'   script <- file.path(root, "worker.R")
 #'   writeLines(c("a <- commandArgs(TRUE); out <- a[2]",
 #'     "writeLines('model', file.path(out, 'model.txt'))",
@@ -172,7 +172,7 @@ bs_run_backend <- function(backend, operation, inputs, parameters = list(), out,
 #' if (requireNamespace("processx", quietly = TRUE)) {
 #'   root <- tempfile()
 #'   dir.create(root)
-#'   # A minimal worker that writes one artifact and a completion record.
+#'   # A minimal worker that writes one artefact and a completion record.
 #'   script <- file.path(root, "worker.R")
 #'   writeLines(c("a <- commandArgs(TRUE); out <- a[2]",
 #'     "writeLines('model', file.path(out, 'model.txt'))",
@@ -192,14 +192,14 @@ bs_train <- function(inputs, backend, out, parameters = list(), timeout = 3600) 
   bs_run_backend(backend, "train", inputs, parameters, out, timeout)
 }
 
-#' Analyze using a configured worker
+#' Analyse using a configured worker
 #' @inheritParams bs_run_backend
 #' @return A validated bs_job receipt. Whole-slide capability depends on the worker.
 #' @examples
 #' if (requireNamespace("processx", quietly = TRUE)) {
 #'   root <- tempfile()
 #'   dir.create(root)
-#'   # A minimal worker that writes one artifact and a completion record.
+#'   # A minimal worker that writes one artefact and a completion record.
 #'   script <- file.path(root, "worker.R")
 #'   writeLines(c("a <- commandArgs(TRUE); out <- a[2]",
 #'     "writeLines('model', file.path(out, 'model.txt'))",

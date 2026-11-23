@@ -2,7 +2,7 @@
 #'
 #' Preserves candidate identity and class without asserting that an event is one
 #' cell. No intensity features, channel measurements or cell areas are invented.
-#' Coordinates must already be in the image frame in micrometers. A physical
+#' Coordinates must already be in the image frame in micrometres. A physical
 #' slide is mapped to cellspec's sample_id; no animal identity is inferred.
 #' @param events Data frame with event_id, image_id, physical_slide_id, x_um,
 #'   y_um and event_type. Event IDs must be unique within an image.

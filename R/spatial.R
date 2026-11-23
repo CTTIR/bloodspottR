@@ -4,8 +4,8 @@
 #' image coordinates with no geographic CRS; the declared unit is explicit.
 #' Overlapping polygons are unioned before conversion.
 #' @param polygons An `sf` or `sfc` object containing valid polygons only.
-#' @param coordinate_unit Either `um` or `mm`; returned coordinates use micrometers.
-#' @return A `spatstat.geom` polygonal observation window in micrometers.
+#' @param coordinate_unit Either `um` or `mm`; returned coordinates use micrometres.
+#' @return A `spatstat.geom` polygonal observation window in micrometres.
 #' @examples
 #' if (requireNamespace("sf", quietly = TRUE) &&
 #'     requireNamespace("spatstat.geom", quietly = TRUE)) {
@@ -64,7 +64,7 @@ tissue_window <- function(polygons, coordinate_unit = c("um", "mm")) {
 
 #' Construct a cell point pattern inside observed tissue
 #' @param cells Data frame with unique `cell_id` and finite `x_um`, `y_um` columns.
-#' @param window A tissue observation window in micrometers from `tissue_window()`.
+#' @param window A tissue observation window in micrometres from `tissue_window()`.
 #' @return A marked `spatstat.geom` point pattern. Points in holes or outside
 #'   tissue, duplicate IDs and duplicate coordinates produce errors.
 #' @examples

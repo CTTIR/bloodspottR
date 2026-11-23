@@ -18,7 +18,7 @@ bs_backend(
 
 \item{version}{Explicit worker version or source commit identifier.}
 
-\item{operations}{Supported operations, such as train or analyze.}
+\item{operations}{Supported operations, such as \code{train} or \code{analyze}.}
 }
 \value{
 A bs_backend specification.
@@ -26,7 +26,7 @@ A bs_backend specification.
 \description{
 The explicitly trusted executable receives two final arguments: a JSON request
 path and an output staging directory. It must write result.json with
-schema_version 1, status 'complete', and a nonempty artifacts array of relative
+schema_version 1, status 'complete', and a nonempty \code{artifacts} array of relative
 file paths. A subprocess is isolated and cleaned up after completion or timeout.
 Workers must keep helpers attached to their ancestry and join them before
 successful exit. Intentionally detached processes are unsupported. Logs are
@@ -37,7 +37,7 @@ No worker is installed or started by this constructor.
 if (requireNamespace("processx", quietly = TRUE)) {
   root <- tempfile()
   dir.create(root)
-  # A minimal worker that writes one artifact and a completion record.
+  # A minimal worker that writes one artefact and a completion record.
   script <- file.path(root, "worker.R")
   writeLines(c("a <- commandArgs(TRUE); out <- a[2]",
     "writeLines('model', file.path(out, 'model.txt'))",

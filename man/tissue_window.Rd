@@ -9,10 +9,10 @@ tissue_window(polygons, coordinate_unit = c("um", "mm"))
 \arguments{
 \item{polygons}{An \code{sf} or \code{sfc} object containing valid polygons only.}
 
-\item{coordinate_unit}{Either \code{um} or \code{mm}; returned coordinates use micrometers.}
+\item{coordinate_unit}{Either \code{um} or \code{mm}; returned coordinates use micrometres.}
 }
 \value{
-A \code{spatstat.geom} polygonal observation window in micrometers.
+A \code{spatstat.geom} polygonal observation window in micrometres.
 }
 \description{
 Preserves holes and disconnected tissue. Input coordinates must be local

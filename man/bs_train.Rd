@@ -13,7 +13,7 @@ bs_train(inputs, backend, out, parameters = list(), timeout = 3600)
 
 \item{out}{New output directory. It is committed only after validation.}
 
-\item{parameters}{Named list of JSON-serializable worker settings.}
+\item{parameters}{Named list of JSON-serialisable worker settings.}
 
 \item{timeout}{Maximum elapsed seconds for the worker.}
 }
@@ -27,7 +27,7 @@ Train using a configured worker
 if (requireNamespace("processx", quietly = TRUE)) {
   root <- tempfile()
   dir.create(root)
-  # A minimal worker that writes one artifact and a completion record.
+  # A minimal worker that writes one artefact and a completion record.
   script <- file.path(root, "worker.R")
   writeLines(c("a <- commandArgs(TRUE); out <- a[2]",
     "writeLines('model', file.path(out, 'model.txt'))",

@@ -14,7 +14,7 @@
 #' Opening never mutates files and does not start analysis services.
 #' @param path Project directory.
 #' @param create Whether to create a new project.
-#' @return A `bs_project` handle with its normalized root and manifest.
+#' @return A `bs_project` handle with its normalised root and manifest.
 #' @examples
 #' path <- file.path(tempdir(), "bloodspottr-example-project")
 #' project <- bs_project(path, create = TRUE)

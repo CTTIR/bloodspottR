@@ -28,11 +28,11 @@ check_nonnegative <- function(x, name, integer = FALSE, allow_na = FALSE) {
 #' @param n_spots Nonnegative whole spot counts.
 #' @param red_pixels Nonnegative whole positive-pixel counts within tissue.
 #' @param tissue_pixels Nonnegative whole evaluable-tissue pixel counts.
-#' @param pixel_width_um,pixel_height_um Pixel dimensions in micrometers; either
+#' @param pixel_width_um,pixel_height_um Pixel dimensions in micrometres; either
 #'   one value or one per measurement.
 #' @param n_profiles Optional nonnegative whole counts of resolved profiles.
 #'   Omit when profile counts are unavailable or unsupported.
-#' @return A data frame of areas in square millimeters, counts, fractions and
+#' @return A data frame of areas in square millimetres, counts, fractions and
 #'   densities. The `n_profiles` and `profiles_per_mm2` columns are `NA` when absent.
 #' @export
 #' @examples

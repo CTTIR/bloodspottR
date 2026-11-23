@@ -13,7 +13,7 @@ License: MIT + file LICENSE
 Copyright: See file inst/COPYRIGHTS for the bundled 'OpenSeadragon'
  library.
 Encoding: UTF-8
-Language: en-US
+Language: en-GB
 Depends: R (>= 4.2.0)
 Imports: cli, digest, jsonlite, lifecycle, rlang
 Suggests: testthat (>= 3.1.7), sf, spatstat.geom, shiny, processx, ps,

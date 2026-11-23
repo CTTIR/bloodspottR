@@ -2,7 +2,7 @@
 % Please edit documentation in R/color.R
 \name{bs_color_features}
 \alias{bs_color_features}
-\title{Extract the study's three relative optical-density color features}
+\title{Extract the study's three relative optical-density colour features}
 \usage{
 bs_color_features(rgb, white = 255, pseudocount = 1)
 }

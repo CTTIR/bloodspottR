@@ -31,7 +31,7 @@ reference:
       - aggregate_burden
       - measure_event_burden
       - aggregate_event_burden
-  - title: Color and profile shape
+  - title: Colour and profile shape
     desc: Relative optical-density features and calibrated profile diameters.
     contents:
       - bs_color_features

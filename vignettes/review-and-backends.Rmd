@@ -105,7 +105,7 @@ A successful worker writes `result.json` with this structure:
 {"schema_version":1,"status":"complete","artifacts":["measurements.csv"]}
 ```
 
-Artifacts must be regular files beneath the staging directory. Absolute paths,
+Artefacts must be regular files beneath the staging directory. Absolute paths,
 traversal, symbolic links, duplicate aliases and reserved receipt names are
 rejected. Input checksums are verified after execution. Successful output gets a
 receipt containing the exact request, settings and request hash and is published
@@ -140,9 +140,9 @@ job$status
 
 This fixture tests transport and publication only. A scientific worker must also
 record model and code identity, calibration, training/test split, valid support,
-normalization branch, thresholds, and independent validation. Partition by the
+normalisation branch, thresholds, and independent validation. Partition by the
 physical source slide before generating training crops to avoid leakage. Sparse
-points need an explicit supervision mask; unlabeled pixels are not negatives.
+points need an explicit supervision mask; unlabelled pixels are not negatives.
 
 Native QuPath save/export integration, portable DNN training and whole-slide
 inference remain separate qualification work. The preserved study scripts and

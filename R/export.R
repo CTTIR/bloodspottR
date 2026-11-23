@@ -9,7 +9,7 @@
 #' @param results A validated bloodspottR result object.
 #' @param out A new output directory.
 #' @param xlsx Include an Excel workbook (requires openxlsx2).
-#' @return The normalized delivery directory, invisibly.
+#' @return The normalised delivery directory, invisibly.
 #' @examples
 #' x <- bs_example()
 #' out <- tempfile()

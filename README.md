@@ -76,14 +76,14 @@ optional `annotations` and `label` columns. PNG/JPEG previews and saved overlays
 work directly. Native whole-slide images use an optional OpenSlide Python reader;
 QuPath GeoJSON supplies selectable points and polygons with their recorded
 measurements. Multiple images or regions may link to one slide. `group_by` and
-`group_label` customize the tissue filter; `title` customizes the heading.
+`group_label` customise the tissue filter; `title` customises the heading.
 
 Passing a result file path enables refresh of saved measurements; Watch saved
 files also refreshes exported annotations. It never edits the source project or
 reruns analysis. See the [viewer tutorial](https://cttir.github.io/bloodspottR/articles/shiny-results-explorer.html)
 for coordinate transforms, Python setup, format limits and complete examples.
 
-## Import, summarize and preserve a delivery
+## Import, summarise and preserve a delivery
 
 ```r
 # Adapt a preserved study summary, or use profile = "canonical" for a canonical CSV.
@@ -110,7 +110,7 @@ states the comparison direction. Standalone comparison CSVs need this context
 alongside them.
 `bs_export_results()` writes the table bundle without HTML;
 `xlsx = TRUE` adds a workbook when **openxlsx2** is installed. Large images,
-individual annotation geometry and training weights remain separate artifacts.
+individual annotation geometry and training weights remain separate artefacts.
 The initial package renderer does not recreate the study-specific TeX/PDF image
 supplement; its HTML can be printed from a browser.
 
@@ -121,12 +121,12 @@ supplement; its HTML can be printed from a browser.
 | Project metadata | `bs_project()`, `bs_status()` |
 | Preserved measurements | `bs_import_legacy()`, `bs_validate()`, `bs_summarize()` |
 | Paired comparison | `bs_compare()` with explicit shared-support checks |
-| Review records | Saved-artifact review plans and confirmation receipts |
+| Review records | Saved-artefact review plans and confirmation receipts |
 | Backend boundary | Versioned requests and explicit executable invocation |
 | Suite reuse | `bs_cttir_inventory()`, calibrated `bs_as_cellspec()` exchange |
 | Results | `bs_export_results()`, `bs_report()`, `bs_app()` |
 | Existing measurement core | `measure_burden()`, `aggregate_burden()`, `measure_event_burden()`, `aggregate_event_burden()` |
-| Color and profile shape | `bs_color_features()`, `bs_profile_extent()` |
+| Colour and profile shape | `bs_color_features()`, `bs_profile_extent()` |
 | Optional spatial geometry | `tissue_window()`, `cell_pattern()` |
 
 The package inventories source metadata across a chosen CTTIR suite directory
@@ -189,10 +189,10 @@ external dependencies may retain their own classes. Report reproducible issues
 through [GitHub issues](https://github.com/CTTIR/bloodspottR/issues), using synthetic
 or de-identified examples.
 
-## License
+## Licence
 
 MIT. Copyright 2026 R. Heller. See [LICENSE.md](LICENSE.md).
-The bundled OpenSeadragon viewer retains its [BSD-3-Clause license](https://github.com/CTTIR/bloodspottR/blob/main/inst/app/vendor/LICENSE-openseadragon.txt).
+The bundled OpenSeadragon viewer retains its [BSD-3-Clause licence](https://github.com/CTTIR/bloodspottR/blob/main/inst/app/vendor/LICENSE-openseadragon.txt).
 OpenSlide is an optional external dependency and is not bundled.
 
 ## Use of LLM tools

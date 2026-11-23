@@ -21,7 +21,7 @@ Validation failures raised by the package inherit from the condition class
 \itemize{
 \item Measurement: \code{\link[=measure_burden]{measure_burden()}}, \code{\link[=aggregate_burden]{aggregate_burden()}},
 \code{\link[=measure_event_burden]{measure_event_burden()}}, \code{\link[=aggregate_event_burden]{aggregate_event_burden()}}.
-\item Color and profile shape: \code{\link[=bs_color_features]{bs_color_features()}}, \code{\link[=bs_profile_extent]{bs_profile_extent()}}.
+\item Colour and profile shape: \code{\link[=bs_color_features]{bs_color_features()}}, \code{\link[=bs_profile_extent]{bs_profile_extent()}}.
 \item Spatial geometry: \code{\link[=tissue_window]{tissue_window()}}, \code{\link[=cell_pattern]{cell_pattern()}}.
 \item Results: \code{\link[=bs_import_legacy]{bs_import_legacy()}}, \code{\link[=bs_validate]{bs_validate()}}, \code{\link[=bs_summarize]{bs_summarize()}},
 \code{\link[=bs_compare]{bs_compare()}}, \code{\link[=bs_project]{bs_project()}}, \code{\link[=bs_status]{bs_status()}}.

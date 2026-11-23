@@ -9,7 +9,7 @@ cell_pattern(cells, window)
 \arguments{
 \item{cells}{Data frame with unique \code{cell_id} and finite \code{x_um}, \code{y_um} columns.}
 
-\item{window}{A tissue observation window in micrometers from \code{tissue_window()}.}
+\item{window}{A tissue observation window in micrometres from \code{tissue_window()}.}
 }
 \value{
 A marked \code{spatstat.geom} point pattern. Points in holes or outside

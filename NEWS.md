@@ -1,7 +1,7 @@
 # bloodspottR 0.2.0
 
 * The default import profile of `bs_import_legacy()` is now called `"legacy_areas"`, after what it does: it maps the legacy area columns `tissue_mm2` and `red_mm2` to `tissue_area_mm2` and `red_area_mm2`. The former name `"p079"` still works as a deprecated alias with identical results and signals a deprecation through 'lifecycle', which is now imported.
-* The Overview plot of `bs_app()` uses the color-vision-deficiency-safe Okabe-Ito colors together with symbols, titles its legend with `group_label`, places the legend above the plot instead of over the points, starts both axes at zero and draws text at the size of the surrounding page. In a narrow window with many groups the legend text shrinks and surplus entries are summarized as "+ n more", so the plot always draws.
+* The Overview plot of `bs_app()` uses the colour-vision-deficiency-safe Okabe-Ito colours together with symbols, titles its legend with `group_label`, places the legend above the plot instead of over the points, starts both axes at zero and draws text at the size of the surrounding page. In a narrow window with many groups the legend text shrinks and surplus entries are summarised as "+ n more", so the plot always draws.
 * `bs_report()` shows non-integer values in its HTML tables with six significant digits and whole counts in full; the CSV and JSON files are unchanged. The Slides table of `bs_app()` shows whole counts without decimals.
 * Add a package help topic (`?bloodspottR`), group the reference index of the documentation site by task, and link the README tutorials to the rendered articles.
 
@@ -12,9 +12,13 @@
 * Calibrated burden and pooled summaries reject dimensioned or classed numeric measurements before arithmetic. Matrix count/area columns can no longer multiply counts or denominators while leaving the measurement count unchanged; grouping IDs and quality flags also require one value per row. Valid calibration, exact-count limits and missing-profile propagation are unchanged.
 
 * Prepare the first CRAN submission: every exported function has a runnable
-  example, the description is phrased as full sentences, `Language: en-US`,
+  example, the description is phrased as full sentences, `Language: en-GB`,
   the documentation site URL and the bundled 'OpenSeadragon' copyright
   (`inst/COPYRIGHTS`) are declared, and a spelling wordlist is added.
+* The help pages, README, vignettes and these notes use British spelling
+  (colour, micrometre, artefact, analyse). Function names, operation names
+  and JSON keys such as `bs_analyze()`, `"analyze"` and `artifacts` keep
+  their spelling.
 * Deploy the pkgdown site with GitHub Pages from a new workflow.
 
 * Retry a fresh descendant snapshot when a child vanishes during Linux process
@@ -29,7 +33,7 @@
 * Retain valid results when a saved refresh loses its configured grouping
   column, and reject annotation transforms that overflow numeric range.
 
-* Standardize the named v5 package logo across README, documentation pages
+* Standardise the named v5 package logo across README, documentation pages
   and available application headers, with matching light and dark artwork.
 
 
@@ -49,7 +53,7 @@
 * Add a Shiny results explorer with explicit synthetic demonstration data,
   organ and quality filters, missing-data visibility, and guarded uploads.
 * Add a bounded review queue with saved-export receipts and class-specific scope.
-* Add a versioned external-worker protocol with timeout cleanup and input/output
+* Add a versioned external-worker protocol with timeout clean-up and input/output
   verification; native DNN workers remain separately qualified integrations.
 * Add source-suite inventory and calibrated candidate exchange with cellspecR.
 * Preserve the existing calibrated burden and spatial APIs.

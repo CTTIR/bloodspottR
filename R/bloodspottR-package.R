@@ -12,7 +12,7 @@
 #' @section Main functions:
 #' * Measurement: [measure_burden()], [aggregate_burden()],
 #'   [measure_event_burden()], [aggregate_event_burden()].
-#' * Color and profile shape: [bs_color_features()], [bs_profile_extent()].
+#' * Colour and profile shape: [bs_color_features()], [bs_profile_extent()].
 #' * Spatial geometry: [tissue_window()], [cell_pattern()].
 #' * Results: [bs_import_legacy()], [bs_validate()], [bs_summarize()],
 #'   [bs_compare()], [bs_project()], [bs_status()].

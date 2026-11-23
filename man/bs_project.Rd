@@ -12,7 +12,7 @@ bs_project(path, create = FALSE)
 \item{create}{Whether to create a new project.}
 }
 \value{
-A \code{bs_project} handle with its normalized root and manifest.
+A \code{bs_project} handle with its normalised root and manifest.
 }
 \description{
 Creation writes a versioned JSON manifest only to a new, empty directory.

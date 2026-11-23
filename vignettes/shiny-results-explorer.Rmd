@@ -136,7 +136,7 @@ local qualification. A QuPath `.qpproj`/`.qpdata` or TissueGnostics `.aqproj` is
 project container, not an OpenSlide image: export the image and QuPath GeoJSON
 first. This viewer does not write back to the native project.
 
-## Customize and watch saved results
+## Customise and watch saved results
 
 `title`, `group_by` and `group_label` adapt the interface to other tissue panels
 or a different metadata grouping. Labels and organ choices are not fixed:
@@ -225,7 +225,7 @@ can appear in the plot; the cards still account for every selected row.
 
 - **Slide viewer:** linked image layers, zoom/pan, recorded slide measurements and selectable annotations.
 - **Overview:** one point per slide with finite measurements and positive tissue
-  support. Tissue has both a color and a symbol. The exact values are in Slides.
+  support. Tissue has both a colour and a symbol. The exact values are in Slides.
 - **Slides:** all selected records, including missing measurements. Wide tables
   scroll within their panel on small screens.
 - **Compare:** a supplied comparison table, filtered by physical-slide identity.

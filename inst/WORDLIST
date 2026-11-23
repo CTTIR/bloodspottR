@@ -1,5 +1,6 @@
 anisotropic
 Aperio
+backends
 bs
 catchable
 cellspec
@@ -13,6 +14,7 @@ cli
 CMD
 collinear
 copyediting
+CSVs
 Ctrl
 CTTIR
 de
@@ -31,9 +33,11 @@ json
 jsonlite
 KISSKI
 knitr
+lifecycle
 Lifecycle
 LLM
 MiB
+nonempty
 Okabe
 OpenSeadragon
 OpenSlide
@@ -45,8 +49,10 @@ pkgdown
 processx
 ps
 px
+PyTorch
 qc
 QuPath
+R's
 README
 reimport
 renderer
@@ -55,12 +61,15 @@ rmarkdown
 RStudio
 runnable
 selectable
+serialisable
 serializable
 sf
 SHA
 spatstat
+standalone
 subprocess
 SVS
+TeX
 TissueGnostics
 toolchain
 transactional

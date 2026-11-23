@@ -14,7 +14,7 @@ bs_export_results(results, out, xlsx = FALSE)
 \item{xlsx}{Include an Excel workbook (requires openxlsx2).}
 }
 \value{
-The normalized delivery directory, invisibly.
+The normalised delivery directory, invisibly.
 }
 \description{
 Creates a new directory with CSV tables, optional Excel output and a SHA-256
