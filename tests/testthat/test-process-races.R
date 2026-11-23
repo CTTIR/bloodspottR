@@ -1,39 +1,77 @@
 rscript <- function() file.path(R.home("bin"), "Rscript")
 
+# Write `code` to an R script in `dir`. Scripts are files rather than
+# `Rscript -e`: on Windows a killed `Rscript -e` leaves its temporary
+# expression file behind.
+r_script <- function(code, dir = tempfile("bloodspottr-script-")) {
+  dir.create(dir, showWarnings = FALSE)
+  path <- tempfile("script-", tmpdir = dir, fileext = ".R")
+  writeLines(code, path)
+  path
+}
+
 # Start an R process that starts `children` sleeping R processes through
-# processx, each of which starts `grandchildren` more. Every started PID is
-# recorded. Scripts are files, so no command line needs shell quoting.
+# processx, each of which starts `grandchildren` more. Parents record the PIDs
+# they start. Every R process also records itself once its script runs, and
+# the tree is returned only after all of them have: on Linux the R front end
+# is a shell script whose short-lived helpers are children of the starting
+# process until R itself runs.
 process_tree <- function(children = 1L, grandchildren = 0L) {
   dir <- tempfile("bloodspottr-tree-")
   dir.create(dir)
   record <- file.path(dir, "pids")
+  ready <- file.path(dir, "ready")
+  announce <- sprintf("cat(Sys.getpid(), '\\n', sep = '', file = %s, append = TRUE)",
+                      deparse(ready))
   spawn <- function(n, script) {
-    c(sprintf("k <- lapply(seq_len(%d), function(i)", n),
-      sprintf("  processx::process$new(%s, c(%s, %s)))",
-              deparse(rscript()), deparse(script), deparse(record)),
-      "cat(vapply(k, function(x) x$get_pid(), 1L), sep = '\\n',",
-      "    file = commandArgs(TRUE)[1], append = TRUE)",
+    c(announce,
+      sprintf("k <- lapply(seq_len(%d), function(i)", n),
+      sprintf("  processx::process$new(%s, %s))", deparse(rscript()), deparse(script)),
+      sprintf("cat(vapply(k, function(x) x$get_pid(), 1L), sep = '\\n', file = %s,",
+              deparse(record)),
+      "    append = TRUE)",
       "Sys.sleep(30)")
   }
   leaf <- file.path(dir, "leaf.R")
-  writeLines("Sys.sleep(30)", leaf)
+  writeLines(c(announce, "Sys.sleep(30)"), leaf)
   middle <- file.path(dir, "middle.R")
   writeLines(spawn(grandchildren, leaf), middle)
   top <- file.path(dir, "top.R")
   writeLines(spawn(children, if (grandchildren > 0L) middle else leaf), top)
-  root <- processx::process$new(rscript(), c(top, record))
+  root <- processx::process$new(rscript(), top)
   expected <- children * (1L + grandchildren)
+  lines <- function(path) if (file.exists(path)) readLines(path) else character()
   deadline <- Sys.time() + 30
   while (Sys.time() < deadline &&
-         (!file.exists(record) || length(readLines(record)) < expected))
+         (length(lines(record)) < expected || length(lines(ready)) < expected + 1L))
     Sys.sleep(0.05)
-  pids <- if (file.exists(record)) as.integer(readLines(record)) else integer()
-  list(root = root, pids = pids, dir = dir)
+  list(root = root, pids = as.integer(lines(record)), dir = dir)
 }
 
 drop_tree <- function(tree) {
   tree$root$kill_tree()
   unlink(tree$dir, recursive = TRUE)
+}
+
+# Check descendant handles found below `root` (a PID) against the `fixture`
+# PIDs a test started: every fixture process is found, each found process
+# names the root or an earlier found process as its parent (so the list is
+# real descendants, parents first), and anything else found is a console host,
+# which Windows starts as a child of every console program.
+expect_descendants <- function(found, root, fixture) {
+  pids <- vapply(found, ps::ps_pid, 1L)
+  parents <- vapply(found, function(h)
+    tryCatch(ps::ps_ppid(h), error = function(e) NA_integer_), 1L)
+  expect_true(all(fixture %in% pids))
+  expect_false(anyNA(parents))
+  for (i in seq_along(pids))
+    expect_true(parents[[i]] %in% c(root, pids[seq_len(i - 1L)]))
+  extra <- found[!pids %in% fixture]
+  names <- vapply(extra, function(h)
+    tryCatch(tolower(ps::ps_name(h)), error = function(e) NA_character_), "")
+  allowed <- if (isTRUE(ps::ps_os_type()[["WINDOWS"]])) "conhost.exe" else character()
+  expect_true(all(names %in% allowed), info = paste(names, collapse = ", "))
+  invisible(pids)
 }
 
 test_that("descendants are found at every depth, parents before their children", {
@@ -45,8 +83,11 @@ test_that("descendants are found at every depth, parents before their children",
   parents <- vapply(tree$pids, function(pid) ps::ps_ppid(ps::ps_handle(pid)), 1L)
   child <- tree$pids[parents == tree$root$get_pid()]
   grandchild <- tree$pids[parents == child]
-  found <- vapply(.bs_process_children(tree$root$as_ps_handle()), ps::ps_pid, 1L)
-  expect_identical(found, c(child, grandchild))
+  expect_length(child, 1L)
+  expect_length(grandchild, 1L)
+  pids <- expect_descendants(.bs_process_children(tree$root$as_ps_handle()),
+                             tree$root$get_pid(), tree$pids)
+  expect_lt(match(child, pids), match(grandchild, pids))
 })
 
 test_that("only processes started no earlier than the worker are asked for their parent", {
@@ -54,8 +95,10 @@ test_that("only processes started no earlier than the worker are asked for their
   skip_if_not(ps::ps_is_supported())
   # ps::ps_children() looks up the parent of every process on the machine,
   # which on Windows costs a full process snapshot per process.
-  older <- processx::process$new(rscript(), c("-e", "Sys.sleep(30)"))
-  on.exit(older$kill(), add = TRUE)
+  sleeper <- r_script("Sys.sleep(30)")
+  on.exit(unlink(dirname(sleeper), recursive = TRUE), add = TRUE)
+  older <- processx::process$new(rscript(), sleeper)
+  on.exit(older$kill_tree(), add = TRUE)
   Sys.sleep(0.2)
   tree <- process_tree(children = 1L)
   on.exit(drop_tree(tree), add = TRUE)
@@ -67,15 +110,16 @@ test_that("only processes started no earlier than the worker are asked for their
                                          time = ps::ps_create_time(p))
     ppid(p)
   }, .package = "ps")
-  found <- vapply(.bs_process_children(root), ps::ps_pid, 1L)
-  expect_identical(found, tree$pids)
+  found <- .bs_process_children(root)
+  # Taken before the checks below, which look up parents themselves.
   asked_pids <- vapply(asked, `[[`, 1L, "pid")
   asked_times <- vapply(asked, function(x) as.numeric(x$time), 1)
+  expect_descendants(found, tree$root$get_pid(), tree$pids)
   expect_false(Sys.getpid() %in% asked_pids)
   expect_false(older$get_pid() %in% asked_pids)
   started <- as.numeric(ps::ps_create_time(root))
   expect_true(all(asked_times >= started - .bs_time_tolerance))
-  expect_lt(length(asked), length(ps::ps_pids()))
+  expect_lt(length(asked_pids), length(ps::ps_pids()))
 })
 
 test_that("a child that vanishes during enumeration is skipped without emptying the result", {
@@ -92,8 +136,9 @@ test_that("a child that vanishes during enumeration is skipped without emptying 
         class = c("os_error", "ps_error", "error", "condition")))
     handle(pid, time)
   }, .package = "ps")
-  found <- vapply(.bs_process_children(tree$root$as_ps_handle()), ps::ps_pid, 1L)
-  expect_identical(found, tree$pids[1L])
+  found <- .bs_process_children(tree$root$as_ps_handle())
+  pids <- expect_descendants(found, tree$root$get_pid(), tree$pids[1L])
+  expect_false(vanished %in% pids)
 })
 
 test_that("a failure to list processes remains a failure", {
@@ -112,7 +157,9 @@ test_that("a failure to list processes remains a failure", {
 test_that("a parent that has exited is reported instead of matched by PID", {
   skip_if_not_installed("processx"); skip_if_not_installed("ps")
   skip_if_not(ps::ps_is_supported())
-  p <- processx::process$new(rscript(), c("-e", "invisible(0)"))
+  script <- r_script("invisible(0)")
+  on.exit(unlink(dirname(script), recursive = TRUE), add = TRUE)
+  p <- processx::process$new(rscript(), script)
   handle <- p$as_ps_handle()
   p$wait(10000)
   rm(p); invisible(gc())
@@ -186,7 +233,9 @@ test_that("without observation a helper left by the worker is still stopped", {
     result <- .bs_run_process(rscript(), c(script, identity_file), timeout)
     identity <- readRDS(identity_file)
     handle <- ps::ps_handle(identity$pid, time = identity$time)
-    running <- ps::ps_is_running(handle) && ps::ps_status(handle) != "zombie"
+    # A reaped zombie can vanish between the two calls.
+    running <- tryCatch(ps::ps_is_running(handle) && ps::ps_status(handle) != "zombie",
+                        no_such_process = function(e) FALSE)
     if (running) ps::ps_kill(handle)
     expect_false(running)
     expect_identical(result$timeout, timeout < 5)
@@ -210,18 +259,23 @@ test_that("Linux task lists find descendants at every depth, parents first", {
     listed <<- listed + 1L
     pids()
   }, .package = "ps")
-  found <- vapply(.bs_linux_descendants(root), ps::ps_pid, 1L)
-  expect_setequal(found, tree$pids)
+  found <- expect_descendants(.bs_linux_descendants(root), tree$root$get_pid(),
+                              tree$pids)
   expect_setequal(found[1:2], children)
   expect_identical(listed, 0L)
-  expect_setequal(vapply(.bs_process_children(root), ps::ps_pid, 1L), found)
+  # With every fixture process started, both methods see the same tree.
+  scanned <- expect_descendants(.bs_process_children(root), tree$root$get_pid(),
+                                tree$pids)
+  expect_setequal(scanned, found)
 })
 
 test_that("Linux task lists of a finished worker are empty", {
   skip_if_not_installed("processx"); skip_if_not_installed("ps")
   skip_if_not(ps::ps_is_supported())
   skip_if(.bs_watch_mode() != "children", "no /proc task children lists here")
-  p <- processx::process$new(rscript(), c("-e", "invisible(0)"))
+  script <- r_script("invisible(0)")
+  on.exit(unlink(dirname(script), recursive = TRUE), add = TRUE)
+  p <- processx::process$new(rscript(), script)
   handle <- p$as_ps_handle()
   p$wait(10000)
   expect_identical(.bs_linux_descendants(handle), list())

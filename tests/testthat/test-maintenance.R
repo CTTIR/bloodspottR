@@ -68,7 +68,9 @@ test_that("worker completion and failure clean observed descendants with inherit
     # Retain the observed creation time: a reaped PID cannot be queried again,
     # and a subsequently reused PID must not become this test's cleanup target.
     handle <- ps::ps_handle(identity$pid, time = identity$time)
-    running <- ps::ps_is_running(handle) && ps::ps_status(handle) != "zombie"
+    # A reaped zombie can vanish between the two calls.
+    running <- tryCatch(ps::ps_is_running(handle) && ps::ps_status(handle) != "zombie",
+                        no_such_process = function(e) FALSE)
     if (running) ps::ps_kill(handle)
     expect_false(running)
     expect_identical(result$status, status)
