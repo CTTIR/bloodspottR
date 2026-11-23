@@ -26,6 +26,30 @@ test_that("the overview plot draws complete slides and restores the device state
                class = "bloodspottr_error")
 })
 
+test_that("the overview plot still draws many groups on a narrow device", {
+  d <- .bs_app_results(bs_example())$slides
+  many <- d[rep(1L, 60L), ]
+  many$slide_id <- sprintf("S%02d", 1:60)
+  many$organ <- sprintf("tissue %02d", 1:60)
+  # 300 x 360 px at 96 dpi: a phone-width plot. The fixed-size legend used to
+  # leave no room for the plot ("invalid graphics state", "figure region too large").
+  grDevices::pdf(NULL, width = 3.125, height = 3.75)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  for (n in c(1L, 12L, 30L, 60L))
+    expect_identical(nrow(.bs_app_scatter(many[seq_len(n), ], "organ", "Tissue")), n)
+  # Wide devices keep full-size text and every group.
+  expect_identical(.bs_legend_fit(12L, c(9.4, 3.75))[c("columns", "rows", "scale", "shown")],
+                   list(columns = 5L, rows = 3L, scale = 1, shown = 12L))
+  # Narrow devices shrink the text before dropping entries.
+  narrow <- .bs_legend_fit(12L, c(3.125, 3.75))
+  expect_identical(narrow$shown, 12L)
+  expect_lt(narrow$scale, 1)
+  crowded <- .bs_legend_fit(60L, c(3.125, 3.75))
+  expect_lt(crowded$shown, 60L)
+  expect_lte(crowded$shown + 1L, crowded$columns * crowded$rows)
+  for (fit in list(narrow, crowded)) expect_lte(fit$height, 0.45 * 3.75)
+})
+
 test_that("overview colors are distinct for common group counts", {
   palette <- unname(grDevices::palette.colors(8L, "Okabe-Ito"))[c(6L, 7L, 4L, 2L, 8L, 3L, 1L)]
   expect_length(unique(palette), 7L)

@@ -198,10 +198,33 @@ bs_app <- function(results = NULL, launch = interactive(), images = NULL,
   d
 }
 
+# Legend geometry for a device of `size` inches (width, height): columns are
+# 1.6 in wide and rows 0.22 in high at full text size, below a 0.42 in title
+# band. The legend panel may take at most 45% of the device height, so the plot
+# keeps room for its margins. Text first shrinks to 80% and 60%; entries that
+# still do not fit are replaced by one "+ n more" entry instead of failing.
+.bs_legend_fit <- function(n, size) {
+  limit <- 0.45 * size[2L]
+  for (scale in c(1, 0.8, 0.6)) {
+    columns <- max(1L, min(n, as.integer(floor(size[1L] / (1.6 * scale)))))
+    rows <- as.integer(ceiling(n / columns))
+    if (0.42 + 0.22 * scale * rows <= limit) break
+  }
+  shown <- n
+  fitting <- max(1L, as.integer(floor((limit - 0.42) / (0.22 * scale))))
+  if (rows > fitting) {
+    rows <- fitting
+    shown <- columns * rows - 1L
+  }
+  list(columns = columns, rows = rows, scale = scale, shown = shown,
+       height = 0.42 + 0.22 * scale * rows)
+}
+
 # One point per slide with complete measurements and positive tissue support.
 # Groups are coded redundantly by symbol and by the color-vision-deficiency-safe
 # "Okabe-Ito" palette shipped with grDevices (yellow omitted: low contrast on
-# white). The legend has its own panel above the plot, so it never covers points.
+# white). The legend has its own panel above the plot, so it never covers points;
+# on a narrow device with many groups it shrinks and is then shortened.
 .bs_app_scatter <- function(d, group_by = "organ", group_label = "Tissue") {
   keep <- is.finite(d$tissue_area_mm2) & d$tissue_area_mm2 > 0 &
     is.finite(d$red_area_mm2) & is.finite(d$candidate_spots)
@@ -216,19 +239,26 @@ bs_app <- function(results = NULL, launch = interactive(), images = NULL,
   x <- 100 * (d$red_area_mm2 / d$tissue_area_mm2)
   y <- d$candidate_spots / d$tissue_area_mm2
   upper <- function(v) if (max(v) > 0) 1.08 * max(v) else 1
-  columns <- max(1L, min(length(levels), floor(graphics::par("din")[1L] / 1.6)))
-  legend_rows <- ceiling(length(levels) / columns)
+  fit <- .bs_legend_fit(length(levels), graphics::par("din"))
+  shown <- seq_len(fit$shown)
+  labels <- levels[shown]
+  legend_pch <- symbols[shown]
+  if (fit$shown < length(levels)) {
+    labels <- c(labels, paste0("+ ", length(levels) - fit$shown, " more"))
+    legend_pch <- c(legend_pch, NA)
+  }
   old <- graphics::par(no.readonly = TRUE)
   on.exit({
     graphics::layout(1)
     graphics::par(old)
   }, add = TRUE)
   graphics::layout(matrix(1:2, ncol = 1L),
-                   heights = c(graphics::lcm(2.54 * (0.42 + 0.22 * legend_rows)), 1))
+                   heights = c(graphics::lcm(2.54 * fit$height), 1))
   graphics::par(mar = c(0, 4.8, 0.2, 1), cex = 1)
   graphics::plot.new()
-  graphics::legend("left", legend = levels, title = group_label, title.adj = 0,
-    pch = symbols, col = colors, pt.cex = 1.4, bty = "n", ncol = columns, xpd = NA)
+  graphics::legend("left", legend = labels, title = group_label, title.adj = 0,
+    pch = legend_pch, col = c(colors[shown], NA)[seq_along(labels)], cex = fit$scale,
+    pt.cex = 1.4 * fit$scale, bty = "n", ncol = fit$columns, xpd = NA)
   graphics::par(mar = c(4.4, 4.8, 0.4, 1), cex = 1)
   graphics::plot(x, y, xlim = c(0, upper(x)), ylim = c(0, upper(y)), xaxs = "i", yaxs = "i",
     xlab = "Red-positive tissue (%)", ylab = "Candidate spots / mm\u00b2",

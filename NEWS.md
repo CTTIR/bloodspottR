@@ -1,6 +1,6 @@
 # bloodspottR 0.2.0
 
-* The Overview plot of `bs_app()` uses the color-vision-deficiency-safe Okabe-Ito colors together with symbols, titles its legend with `group_label`, places the legend above the plot instead of over the points, starts both axes at zero and draws text at the size of the surrounding page.
+* The Overview plot of `bs_app()` uses the color-vision-deficiency-safe Okabe-Ito colors together with symbols, titles its legend with `group_label`, places the legend above the plot instead of over the points, starts both axes at zero and draws text at the size of the surrounding page. In a narrow window with many groups the legend text shrinks and surplus entries are summarized as "+ n more", so the plot always draws.
 * `bs_report()` shows non-integer values in its HTML tables with six significant digits and whole counts in full; the CSV and JSON files are unchanged. The Slides table of `bs_app()` shows whole counts without decimals.
 * Add a package help topic (`?bloodspottR`), group the reference index of the documentation site by task, and link the README tutorials to the rendered articles.
 
