@@ -350,12 +350,6 @@ bs_app <- function(results = NULL, launch = interactive(), images = NULL,
   }
 }
 
-.bs_app_logo <- function() {
-  path <- system.file("figures", "bloodspottR_icon_noname.svg", package = "bloodspottR")
-  if (!nzchar(path)) return("")
-  paste0("data:image/svg+xml;base64,", jsonlite::base64_enc(readBin(path, "raw", file.info(path)$size)))
-}
-
 .bs_app_start <- function() {
   previous <- getOption("shiny.maxRequestSize")
   limit <- max(20 * 1024^2, if (is.numeric(previous)) previous else 0)
