@@ -69,19 +69,62 @@
        stdout = read_log(stdout), stderr = read_log(stderr))
 }
 
-# ps 1.9.3 can expose ENOENT when a child exits between the process snapshot
-# and handle creation. Retry a complete enumeration, never substitute an empty
-# result for that error. Previously observed handles remain in `owned` above.
+# Descendants of `parent`, found like ps::ps_children(recursive = TRUE) but
+# without asking every process on the machine for its parent. ps_children()
+# looks up the parent of every process, and on Windows each lookup takes a
+# fresh snapshot of all processes, so one call grows with the square of the
+# number of processes: seconds of system time per poll on a busy machine.
+# A descendant never starts before its ancestors, so only processes started no
+# earlier than `parent` need a parent lookup. Each candidate keeps the handle
+# it was found with, so a process that exits during the walk is skipped on its
+# own instead of failing or emptying the whole enumeration (ps 1.9.3 raised
+# ENOENT when ps_children() created a second handle for a vanished child).
+# A failure to list processes at all still propagates. Previously observed
+# handles remain in `owned` above. Creation times are compared with the 10 ms
+# tolerance that ps itself allows when it matches them, so a rounding
+# difference between processx and ps cannot hide a child.
 .bs_process_children <- function(parent) {
-  for (attempt in seq_len(3L)) {
-    retry <- FALSE
-    children <- tryCatch(ps::ps_children(parent, recursive = TRUE),
-      os_error = function(e) {
-        # Preserve the original ps condition class and errno when rethrowing.
-        if (!identical(e$errno, 2L) || attempt == 3L) base::stop(e)
-        retry <<- TRUE
-        NULL
-      })
-    if (!retry) return(children)
+  root <- ps::ps_pid(parent)
+  root_time <- as.numeric(ps::ps_create_time(parent))
+  candidates <- lapply(setdiff(ps::ps_pids(), root), .bs_process_entry,
+                       since = root_time - .bs_time_tolerance)
+  candidates <- candidates[!vapply(candidates, is.null, logical(1))]
+  pids <- vapply(candidates, `[[`, integer(1), "pid")
+  ppids <- vapply(candidates, `[[`, integer(1), "ppid")
+  times <- vapply(candidates, `[[`, numeric(1), "time")
+  found <- integer()
+  frontier <- root
+  frontier_time <- root_time
+  while (length(frontier)) {
+    # A child is never older than its parent; this also rejects a process
+    # whose recorded parent PID has since been reused by a descendant.
+    parent_at <- match(ppids, frontier)
+    hit <- which(!is.na(parent_at) &
+                 times >= frontier_time[parent_at] - .bs_time_tolerance)
+    # setdiff() guarantees termination even for impossible PID cycles.
+    hit <- setdiff(hit, found)
+    # Parents precede their children, so callers can stop leaves first.
+    found <- c(found, hit)
+    frontier <- pids[hit]
+    frontier_time <- times[hit]
   }
+  # As in ps_children(): fail with no_such_process if `parent` itself has gone,
+  # because its PID may then belong to an unrelated process tree.
+  ps::ps_ppid(parent)
+  lapply(candidates[found], `[[`, "handle")
+}
+
+.bs_time_tolerance <- 0.01
+
+# One process started no earlier than `since` (seconds since the epoch), with
+# its parent PID, or NULL if it is older, has exited or cannot be inspected.
+.bs_process_entry <- function(pid, since) {
+  handle <- tryCatch(ps::ps_handle(pid), error = function(e) NULL)
+  if (is.null(handle)) return(NULL)
+  time <- as.numeric(ps::ps_create_time(handle))
+  if (time < since) return(NULL)
+  ppid <- tryCatch(ps::ps_ppid(handle), error = function(e) NULL)
+  if (is.null(ppid) || is.na(ppid)) return(NULL)
+  list(pid = as.integer(pid), ppid = as.integer(ppid), time = time,
+       handle = handle)
 }

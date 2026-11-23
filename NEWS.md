@@ -22,9 +22,14 @@
 * `CITATION.cff` names the author as "R. Heller", as in DESCRIPTION.
 * Deploy the pkgdown site with GitHub Pages from a new workflow.
 
-* Retry a fresh descendant snapshot when a child vanishes during Linux process
-  enumeration. Preserve observed process identities and propagate repeated or
-  unrelated inspection errors; tests retain child identity before it exits.
+* Watching a worker's descendants no longer asks every process on the machine
+  for its parent. Only processes started no earlier than the worker are
+  inspected, so `bs_run_backend()`, `bs_train()`, `bs_analyze()` and native
+  slide reads stay fast on Windows, where each parent lookup takes a snapshot
+  of all processes and one short worker run cost about 15 seconds of system
+  time on a busy machine. A child that exits during the scan is skipped on its
+  own instead of emptying the scan, observed process identities are kept, and
+  a failure to list processes still stops the run.
 
 * Track and verify observed worker descendants during timeout, failure and
   successful completion; isolate output streams from inherited pipes and bound
