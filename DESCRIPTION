@@ -1,7 +1,9 @@
 Package: bloodspottR
 Title: Calibrated Histology Burden and Erythrocyte Profile Analysis
 Version: 0.2.0
-Authors@R: person("R.", "Heller", email = "raban.heller@uni-ulm.de", role = c("aut", "cre", "cph"))
+Authors@R: person("R.", "Heller", email = "raban.heller@uni-ulm.de",
+    role = c("aut", "cre", "cph"),
+    comment = c(ORCID = "0000-0001-8006-9742"))
 Description: Provides tools for physically calibrated histology burden
  summaries, explicit measurement-area accounting, and tissue-aware spatial
  analysis. Supports reproducible development of red-chromogen and
