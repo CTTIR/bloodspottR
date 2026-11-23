@@ -65,5 +65,6 @@ bs_status <- function(x) {
     registered_results = length(x$manifest$results), running_jobs = NA_integer_,
     note = "Worker state is not inferred from saved manifests"))
   list(kind = "results", schema_version = x$schema_version, slides = nrow(.bs_slides(x)),
-       scientific_status = "exploratory", source = if (is.list(x)) x$source else NULL)
+       scientific_status = "exploratory",
+       source = if (inherits(x, "bs_result")) x$source else NULL)
 }
