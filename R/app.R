@@ -51,7 +51,7 @@ bs_app <- function(results = NULL, launch = interactive(), images = NULL,
     .bs_abort("group_by must name a result metadata column")
   image_table <- .bs_image_manifest(images, results$slides$slide_id)
   app <- shiny::shinyApp(.bs_app_ui(title, group_label, nrow(image_table) > 0L),
-    .bs_app_server(results, image_table, slide_python, result_path, group_by),
+    .bs_app_server(results, image_table, slide_python, result_path, group_by, group_label),
     onStart = .bs_app_start)
   if (launch) shiny::runApp(app) else app
 }
@@ -186,6 +186,58 @@ bs_app <- function(results = NULL, launch = interactive(), images = NULL,
   utils::write.csv(d, file, row.names = FALSE, na = "")
 }
 
+# Whole counts are shown as integers; the table renderer would otherwise print
+# them with two decimals. Values beyond the integer range stay doubles.
+.bs_app_table <- function(d) {
+  d <- .bs_flat_table(d)
+  for (name in intersect(.bs_metrics[3:5], names(d))) {
+    v <- d[[name]]
+    if (is.double(v) && all(is.na(v) | (v == floor(v) & abs(v) <= .Machine$integer.max)))
+      d[[name]] <- as.integer(v)
+  }
+  d
+}
+
+# One point per slide with complete measurements and positive tissue support.
+# Groups are coded redundantly by symbol and by the color-vision-deficiency-safe
+# "Okabe-Ito" palette shipped with grDevices (yellow omitted: low contrast on
+# white). The legend has its own panel above the plot, so it never covers points.
+.bs_app_scatter <- function(d, group_by = "organ", group_label = "Tissue") {
+  keep <- is.finite(d$tissue_area_mm2) & d$tissue_area_mm2 > 0 &
+    is.finite(d$red_area_mm2) & is.finite(d$candidate_spots)
+  d <- d[keep, , drop = FALSE]
+  if (!nrow(d)) .bs_abort("No slides with complete measurements and positive tissue area")
+  groups <- as.character(d[[group_by]])
+  groups[is.na(groups) | !nzchar(groups)] <- "Unspecified"
+  levels <- sort(unique(groups))
+  palette <- unname(grDevices::palette.colors(8L, "Okabe-Ito"))[c(6L, 7L, 4L, 2L, 8L, 3L, 1L)]
+  colors <- rep(palette, length.out = length(levels))
+  symbols <- rep(c(16, 17, 15, 18), length.out = length(levels))
+  x <- 100 * (d$red_area_mm2 / d$tissue_area_mm2)
+  y <- d$candidate_spots / d$tissue_area_mm2
+  upper <- function(v) if (max(v) > 0) 1.08 * max(v) else 1
+  columns <- max(1L, min(length(levels), floor(graphics::par("din")[1L] / 1.6)))
+  legend_rows <- ceiling(length(levels) / columns)
+  old <- graphics::par(no.readonly = TRUE)
+  on.exit({
+    graphics::layout(1)
+    graphics::par(old)
+  }, add = TRUE)
+  graphics::layout(matrix(1:2, ncol = 1L),
+                   heights = c(graphics::lcm(2.54 * (0.42 + 0.22 * legend_rows)), 1))
+  graphics::par(mar = c(0, 4.8, 0.2, 1), cex = 1)
+  graphics::plot.new()
+  graphics::legend("left", legend = levels, title = group_label, title.adj = 0,
+    pch = symbols, col = colors, pt.cex = 1.4, bty = "n", ncol = columns, xpd = NA)
+  graphics::par(mar = c(4.4, 4.8, 0.4, 1), cex = 1)
+  graphics::plot(x, y, xlim = c(0, upper(x)), ylim = c(0, upper(y)), xaxs = "i", yaxs = "i",
+    xlab = "Red-positive tissue (%)", ylab = "Candidate spots / mm\u00b2",
+    pch = symbols[match(groups, levels)],
+    col = grDevices::adjustcolor(colors[match(groups, levels)], alpha.f = 0.8),
+    bty = "l", las = 1, cex = 1.5, xpd = NA)
+  invisible(d)
+}
+
 .bs_app_ui <- function(title = "bloodspottR", group_label = "Tissue", has_images = FALSE) {
   css_path <- system.file("app", "style.css", package = "bloodspottR")
   css <- if (nzchar(css_path)) paste(readLines(css_path, warn = FALSE), collapse = "\n") else ""
@@ -221,7 +273,7 @@ bs_app <- function(results = NULL, launch = interactive(), images = NULL,
           .bs_viewer_ui(),
           shiny::tabPanel("Overview", shiny::tags$h2("Signal and candidate density"),
             shiny::plotOutput("scatter", height = "360px"),
-            shiny::tags$p(class = "bs-caption", "Each point is one slide. Candidate events are not validated cell counts. Missing or zero denominators are omitted.")),
+            shiny::tags$p(class = "bs-caption", "Each point is one slide; identical slides overlap. Both axes start at zero. Candidate events are not validated cell counts. Missing or zero denominators are omitted.")),
           shiny::tabPanel("Slides", shiny::tags$h2("Recorded slide measurements"),
             shiny::tags$div(class = "bs-table", shiny::tableOutput("slides"))),
           shiny::tabPanel("Compare", shiny::tags$h2("Recorded run comparison"),
@@ -235,7 +287,7 @@ bs_app <- function(results = NULL, launch = interactive(), images = NULL,
 }
 
 .bs_app_server <- function(initial, images = data.frame(), slide_python = "",
-                           result_path = NULL, group_by = "organ") {
+                           result_path = NULL, group_by = "organ", group_label = "Tissue") {
   function(input, output, session) {
     current <- shiny::reactiveVal(initial)
     image_manifest <- shiny::reactiveVal(images)
@@ -315,22 +367,15 @@ bs_app <- function(results = NULL, launch = interactive(), images = NULL,
       paste0(sum(complete), " of ", nrow(d), " slides have complete measurements and positive tissue support for plotting. ",
         "Missing measurements remain unknown in pooled summaries.")
     })
-    output$slides <- shiny::renderTable({ .bs_flat_table(filtered()) }, striped = TRUE, bordered = FALSE, spacing = "s", na = "Missing")
+    output$slides <- shiny::renderTable({ .bs_app_table(filtered()) }, striped = TRUE, bordered = FALSE, spacing = "s", na = "Missing")
     output$scatter <- shiny::renderPlot({
       shiny::validate(shiny::need(!is.null(current()), "Load results to display measured slides."))
       d <- filtered()
       keep <- is.finite(d$tissue_area_mm2) & d$tissue_area_mm2 > 0 & is.finite(d$red_area_mm2) & is.finite(d$candidate_spots)
       d <- d[keep, , drop = FALSE]
       shiny::validate(shiny::need(nrow(d) > 0, "No slides with complete measurements and positive tissue area match these filters."))
-      groups <- as.character(d[[group_by]])
-      groups[is.na(groups) | !nzchar(groups)] <- "Unspecified"
-      organs <- sort(unique(groups)); colors <- grDevices::hcl.colors(max(3L, length(organs)), "Dark 3")
-      graphics::plot(100 * (d$red_area_mm2 / d$tissue_area_mm2), d$candidate_spots / d$tissue_area_mm2,
-        xlab = "Red-positive tissue (%)", ylab = "Candidate spots / mm\u00b2",
-        pch = rep(c(16, 17, 15, 18), length.out = length(organs))[match(groups, organs)],
-        col = colors[match(groups, organs)], bty = "l", cex = 1.3)
-      graphics::legend("topleft", legend = organs, pch = rep(c(16, 17, 15, 18), length.out = length(organs)), col = colors[seq_along(organs)], bty = "n")
-    }, alt = "Scatter plot of red-positive tissue percentage against candidate spot density, with tissue indicated by color and symbol. Exact measurements are available in the Slides tab.")
+      .bs_app_scatter(d, group_by, group_label)
+    }, res = 96, alt = "Scatter plot of red-positive tissue percentage against candidate spot density, with tissue indicated by color and symbol. Exact measurements are available in the Slides tab.")
     output$comparison <- shiny::renderTable({
       shiny::req(current())
       d <- current()$comparison
