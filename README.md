@@ -1,11 +1,9 @@
 # bloodspottR <picture class="cttir-readme-logo"><source class="cttir-logo-dark-source" media="(prefers-color-scheme: dark)" srcset="man/figures/logo-with-name-dark.png" /><img src="man/figures/logo-with-name.png" align="right" alt="bloodspottR logo" width="120" height="139" /></picture>
 
-<!-- badges: start -->
 [![R-CMD-check](https://github.com/CTTIR/bloodspottR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CTTIR/bloodspottR/actions/workflows/R-CMD-check.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24426406.svg)](https://doi.org/10.5281/zenodo.24426406)
-<!-- badges: end -->
 
 **Calibrated histology measurements, traceable review and transparent reporting.**
 
