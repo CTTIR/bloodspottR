@@ -375,7 +375,9 @@ bs_app <- function(results = NULL, launch = interactive(), images = NULL,
       d <- d[keep, , drop = FALSE]
       shiny::validate(shiny::need(nrow(d) > 0, "No slides with complete measurements and positive tissue area match these filters."))
       .bs_app_scatter(d, group_by, group_label)
-    }, res = 96, alt = "Scatter plot of red-positive tissue percentage against candidate spot density, with tissue indicated by color and symbol. Exact measurements are available in the Slides tab.")
+      # The legend layout depends on the device width, so a resize redraws the
+      # plot instead of replaying the recorded one.
+    }, res = 96, execOnResize = TRUE, alt = "Scatter plot of red-positive tissue percentage against candidate spot density, with tissue indicated by color and symbol. Exact measurements are available in the Slides tab.")
     output$comparison <- shiny::renderTable({
       shiny::req(current())
       d <- current()$comparison
