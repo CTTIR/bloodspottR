@@ -93,7 +93,8 @@ measure_burden <- function(n_spots, red_pixels, tissue_pixels,
 #' flags describe interpretation limits rather than validating the counts.
 #' Measurement columns must be plain integer/double vectors with one value per
 #' row. Grouping/area IDs and quality flags must also be dimensionless vectors;
-#' matrices and nested columns are rejected before grouping or summation.
+#' matrices and nested columns are rejected before grouping or summation. An
+#' `n_profiles` column that is entirely logical `NA` is read as unknown counts.
 #' @param x Data frame containing grouping columns, `physical_area_id`,
 #'   `n_spots`, `n_profiles`, `red_area_mm2`, and `tissue_area_mm2`.
 #'   An optional character `qc_flags` column contains semicolon-separated flags;
@@ -129,6 +130,9 @@ aggregate_burden <- function(x, by = c("physical_slide_id", "organ")) {
     .bs_abort("Duplicate physical_area_id; resolve repeated or overlapping measurements", call. = FALSE)
   for (name in c("n_spots", "red_area_mm2", "tissue_area_mm2"))
     check_nonnegative(x[[name]], name, name == "n_spots")
+  # An all-missing logical column is R's default spelling of unknown profile counts.
+  if (is.logical(x$n_profiles) && is.null(dim(x$n_profiles)) && all(is.na(x$n_profiles)))
+    x$n_profiles <- as.numeric(x$n_profiles)
   check_nonnegative(x$n_profiles, "n_profiles", TRUE, allow_na = TRUE)
   if ("qc_flags" %in% names(x) && (!is.character(x$qc_flags) ||
       !is.null(dim(x$qc_flags)) || length(x$qc_flags) != nrow(x)))
