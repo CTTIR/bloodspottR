@@ -1,5 +1,9 @@
 # bloodspottR 0.2.0
 
+* The Overview plot of `bs_app()` uses the color-vision-deficiency-safe Okabe-Ito colors together with symbols, titles its legend with `group_label`, places the legend above the plot instead of over the points, starts both axes at zero and draws text at the size of the surrounding page.
+* `bs_report()` shows non-integer values in its HTML tables with six significant digits and whole counts in full; the CSV and JSON files are unchanged. The Slides table of `bs_app()` shows whole counts without decimals.
+* Add a package help topic (`?bloodspottR`), group the reference index of the documentation site by task, and link the README tutorials to the rendered articles.
+
 * Malformed inputs now fail with catchable `bloodspottr_error` conditions instead of base R errors: a result object without a `slides` data frame in `bs_validate()` and `bs_summarize()`, unparseable or non-object JSON and unreadable CSV files in `bs_import_legacy()`, a matrix grouping column in `bs_summarize()`, unknown `profile`, `support` and `coordinate_unit` choices, and missing result or image-manifest files in `bs_app()`. Valid calls, partial matching of choices and defaults are unchanged.
 * `bs_status()` no longer reports a measurement column named `source` as the import source of a plain slide table.
 * `aggregate_burden()` reads an `n_profiles` column that is entirely logical `NA` as unknown profile counts, as the import functions already do, instead of rejecting it.
