@@ -1,5 +1,9 @@
 # bloodspottR 0.2.0
 
+* Malformed inputs now fail with catchable `bloodspottr_error` conditions instead of base R errors: a result object without a `slides` data frame in `bs_validate()` and `bs_summarize()`, unparseable or non-object JSON and unreadable CSV files in `bs_import_legacy()`, a matrix grouping column in `bs_summarize()`, unknown `profile`, `support` and `coordinate_unit` choices, and missing result or image-manifest files in `bs_app()`. Valid calls, partial matching of choices and defaults are unchanged.
+* `bs_status()` no longer reports a measurement column named `source` as the import source of a plain slide table.
+* `aggregate_burden()` reads an `n_profiles` column that is entirely logical `NA` as unknown profile counts, as the import functions already do, instead of rejecting it.
+
 * Calibrated burden and pooled summaries reject dimensioned or classed numeric measurements before arithmetic. Matrix count/area columns can no longer multiply counts or denominators while leaving the measurement count unchanged; grouping IDs and quality flags also require one value per row. Valid calibration, exact-count limits and missing-profile propagation are unchanged.
 
 * Prepare the first CRAN submission: every exported function has a runnable

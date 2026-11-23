@@ -19,7 +19,7 @@
 #' }
 #' @export
 tissue_window <- function(polygons, coordinate_unit = c("um", "mm")) {
-  coordinate_unit <- match.arg(coordinate_unit)
+  coordinate_unit <- .bs_match_arg(coordinate_unit, c("um", "mm"), "coordinate_unit")
   if (!requireNamespace("sf", quietly = TRUE) || !requireNamespace("spatstat.geom", quietly = TRUE))
     .bs_abort("Install sf and spatstat.geom for tissue windows", call. = FALSE)
   if (inherits(polygons, "sf")) polygons <- sf::st_geometry(polygons)

@@ -3,6 +3,8 @@
   if (is.null(images)) return(data.frame())
   base <- getwd()
   if (is.character(images) && length(images) == 1L) {
+    if (is.na(images) || !file.exists(images) || dir.exists(images))
+      .bs_abort("Image manifest file does not exist: ", images)
     base <- dirname(normalizePath(images, mustWork = TRUE))
     images <- utils::read.csv(images, colClasses = "character", check.names = FALSE,
                              na.strings = "")

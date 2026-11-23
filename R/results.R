@@ -1,6 +1,12 @@
 .bs_slides <- function(x) {
-  if (inherits(x, "bs_result")) x$slides else if (is.data.frame(x)) x else
+  if (inherits(x, "bs_result")) {
+    if (!is.list(x) || !is.data.frame(x$slides))
+      .bs_abort("A bs_result must contain a slides data frame", call. = FALSE)
+    return(x$slides)
+  }
+  if (!is.data.frame(x))
     .bs_abort("Expected bs_result or a measurement data frame", call. = FALSE)
+  x
 }
 .bs_metrics <- c("tissue_area_mm2", "red_area_mm2", "candidate_spots",
                  "unresolved_bulk_events", "operational_events")
@@ -93,7 +99,9 @@ bs_validate <- function(x, level = "structure") {
 #' of these named files. The `p079` profile maps legacy area column names; it
 #' does not impose study-specific groups or thresholds. Saved QC/group metadata
 #' are preserved rather than inferred from signal. CSV identifiers are read as
-#' strings, including numeric-looking identifiers with leading zeros.
+#' strings, including numeric-looking identifiers with leading zeros. Unreadable
+#' CSV or JSON files and JSON without a result object fail with a
+#' `bloodspottr_error` condition.
 #' @param path File or directory containing results.
 #' @param profile Adapter profile, `"p079"` or `"canonical"`.
 #' @return A `bs_result` object with canonical slide measurements, source SHA-256
@@ -109,7 +117,7 @@ bs_validate <- function(x, level = "structure") {
 #' @export
 bs_import_legacy <- function(path, profile = "p079") {
   .bs_scalar_string(path, "path")
-  profile <- match.arg(profile, c("p079", "canonical"))
+  profile <- .bs_match_arg(profile, c("p079", "canonical"), "profile")
   if (dir.exists(path)) {
     # Match actual names so exported Slides.csv is distinct from legacy slides.csv.
     candidates <- file.path(path, intersect(list.files(path),
@@ -120,7 +128,10 @@ bs_import_legacy <- function(path, profile = "p079") {
   if (!file.exists(path)) .bs_abort("Result source does not exist", call. = FALSE)
   metadata <- list()
   if (tolower(tools::file_ext(path)) == "json") {
-    raw <- .bs_json(path)
+    raw <- tryCatch(.bs_json(path), error = function(e)
+      .bs_abort("Result JSON could not be parsed: ", conditionMessage(e), call. = FALSE))
+    if (!is.list(raw) || is.data.frame(raw))
+      .bs_abort("JSON must contain a result object with a rows or slides table", call. = FALSE)
     canonical <- !is.null(raw$slides)
     if (canonical && !identical(raw$schema_version, "1.0"))
       .bs_abort("Unsupported result schema", call. = FALSE)
@@ -128,8 +139,9 @@ bs_import_legacy <- function(path, profile = "p079") {
     metadata <- raw[setdiff(names(raw), c("rows", "slides"))]
     if (!is.data.frame(d)) .bs_abort("JSON must contain a rows measurement table", call. = FALSE)
   } else if (tolower(tools::file_ext(path)) == "csv") {
-    d <- utils::read.csv(path, colClasses = "character", check.names = FALSE,
-                         na.strings = "")
+    d <- tryCatch(utils::read.csv(path, colClasses = "character", check.names = FALSE,
+                                  na.strings = ""), error = function(e)
+      .bs_abort("Result CSV could not be read: ", conditionMessage(e), call. = FALSE))
   } else .bs_abort("Only CSV or JSON results are supported", call. = FALSE)
   if (anyDuplicated(names(d))) .bs_abort("Duplicate column names", call. = FALSE)
   if (profile == "p079") {
@@ -198,8 +210,8 @@ bs_summarize <- function(x, strata = NULL, qc_revision = NULL) {
   if (!is.null(strata) && (!is.character(strata) || anyNA(strata) ||
       anyDuplicated(strata) || !all(strata %in% names(d)) || any(strata %in% c(.bs_metrics, "n_slides", "slide_ids", "red_percent", "spots_per_mm2", "events_per_mm2"))))
     .bs_abort("strata must name distinct metadata columns", call. = FALSE)
-  if (length(strata) && any(vapply(d[strata], is.list, logical(1))))
-    .bs_abort("Grouping columns must be atomic", call. = FALSE)
+  if (length(strata) && any(vapply(d[strata], function(v) is.list(v) || !is.null(dim(v)), logical(1))))
+    .bs_abort("Grouping columns must be atomic vectors without dimensions", call. = FALSE)
   keys <- if (length(strata)) unique(d[strata]) else data.frame(.overall = "all")
   ans <- lapply(seq_len(nrow(keys)), function(i) {
     selected <- rep(TRUE, nrow(d))
@@ -251,7 +263,7 @@ bs_summarize <- function(x, strata = NULL, qc_revision = NULL) {
 #' cmp[, c("physical_slide_id", "support_verified", "candidate_spots_delta")]
 #' @export
 bs_compare <- function(runs, support = "common") {
-  support <- match.arg(support, c("common", "union"))
+  support <- .bs_match_arg(support, c("common", "union"), "support")
   if (!is.list(runs) || length(runs) != 2L || is.null(names(runs)) ||
       anyNA(names(runs)) || any(!nzchar(names(runs))) || anyDuplicated(names(runs)))
     .bs_abort("runs must be a named list of exactly two results", call. = FALSE)

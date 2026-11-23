@@ -23,7 +23,9 @@ A folder must contain exactly one
 of these named files. The \code{p079} profile maps legacy area column names; it
 does not impose study-specific groups or thresholds. Saved QC/group metadata
 are preserved rather than inferred from signal. CSV identifiers are read as
-strings, including numeric-looking identifiers with leading zeros.
+strings, including numeric-looking identifiers with leading zeros. Unreadable
+CSV or JSON files and JSON without a result object fail with a
+\code{bloodspottr_error} condition.
 }
 \examples{
 x <- bs_example()

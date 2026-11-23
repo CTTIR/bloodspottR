@@ -39,8 +39,12 @@ bs_app <- function(results = NULL, launch = interactive(), images = NULL,
     .bs_abort("launch must be TRUE or FALSE.", call. = FALSE)
   }
   for (value in list(title, group_by, group_label)) .bs_scalar_string(value, "App labels")
-  result_path <- if (is.character(results) && length(results) == 1L)
-    normalizePath(results, mustWork = TRUE) else NULL
+  result_path <- NULL
+  if (is.character(results) && length(results) == 1L) {
+    if (is.na(results) || !file.exists(results))
+      .bs_abort("Result file does not exist: ", results, call. = FALSE)
+    result_path <- normalizePath(results, mustWork = TRUE)
+  }
   if (!is.null(result_path)) results <- bs_import_legacy(result_path)
   if (!is.null(results)) results <- .bs_app_results(results)
   if (!is.null(results) && !group_by %in% names(results$slides))
