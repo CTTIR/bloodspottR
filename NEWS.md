@@ -19,6 +19,7 @@
   (colour, micrometre, artefact, analyse). Function names, operation names
   and JSON keys such as `bs_analyze()`, `"analyze"` and `artifacts` keep
   their spelling.
+* `CITATION.cff` names the author as "R. Heller", as in DESCRIPTION.
 * Deploy the pkgdown site with GitHub Pages from a new workflow.
 
 * Retry a fresh descendant snapshot when a child vanishes during Linux process
