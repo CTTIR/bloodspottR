@@ -1,10 +1,11 @@
 # bloodspottR <picture class="cttir-readme-logo"><source class="cttir-logo-dark-source" media="(prefers-color-scheme: dark)" srcset="man/figures/logo-with-name-dark.png" /><img src="man/figures/logo-with-name.png" align="right" alt="bloodspottR logo" width="120" height="139" /></picture>
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24426406.svg)](https://doi.org/10.5281/zenodo.24426406)
-
-[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+<!-- badges: start -->
 [![R-CMD-check](https://github.com/CTTIR/bloodspottR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CTTIR/bloodspottR/actions/workflows/R-CMD-check.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE.md)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24426406.svg)](https://doi.org/10.5281/zenodo.24426406)
+<!-- badges: end -->
 
 **Calibrated histology measurements, traceable review and transparent reporting.**
 
@@ -81,7 +82,7 @@ measurements. Multiple images or regions may link to one slide. `group_by` and
 
 Passing a result file path enables refresh of saved measurements; Watch saved
 files also refreshes exported annotations. It never edits the source project or
-reruns analysis. See the [viewer tutorial](https://github.com/CTTIR/bloodspottR/blob/main/vignettes/shiny-results-explorer.Rmd)
+reruns analysis. See the [viewer tutorial](https://cttir.github.io/bloodspottR/articles/shiny-results-explorer.html)
 for coordinate transforms, Python setup, format limits and complete examples.
 
 ## Import, summarize and preserve a delivery
@@ -148,10 +149,10 @@ vignette("shiny-results-explorer", package = "bloodspottR")
 
 | Tutorial | Start here when you want to… |
 | --- | --- |
-| [Measurements to a report](https://github.com/CTTIR/bloodspottR/blob/main/vignettes/bloodspottr-workflow.Rmd) | Import, pool, compare and export slide measurements |
-| [Shiny results explorer](https://github.com/CTTIR/bloodspottR/blob/main/vignettes/shiny-results-explorer.Rmd) | Upload data, filter slides and interpret missing values |
-| [CTTIR interoperability](https://github.com/CTTIR/bloodspottR/blob/main/vignettes/cttir-interoperability.Rmd) | Exchange calibrated candidates with cellspecR |
-| [Review and backends](https://github.com/CTTIR/bloodspottR/blob/main/vignettes/review-and-backends.Rmd) | Record saved reviews and invoke a trusted external worker |
+| [Measurements to a report](https://cttir.github.io/bloodspottR/articles/bloodspottr-workflow.html) | Import, pool, compare and export slide measurements |
+| [Shiny results explorer](https://cttir.github.io/bloodspottR/articles/shiny-results-explorer.html) | Upload data, filter slides and interpret missing values |
+| [CTTIR interoperability](https://cttir.github.io/bloodspottR/articles/cttir-interoperability.html) | Exchange calibrated candidates with cellspecR |
+| [Review and backends](https://cttir.github.io/bloodspottR/articles/review-and-backends.html) | Record saved reviews and invoke a trusted external worker |
 
 The vignettes use runnable synthetic examples and state each interface's limits. Function
 help documents the implemented interfaces. Example data are synthetic.
