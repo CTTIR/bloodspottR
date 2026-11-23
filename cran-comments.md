@@ -14,7 +14,14 @@ This is a new submission.
   Availability using Additional_repositories specification:
     cellspecR   yes   https://cttir.r-universe.dev
 
-  This is a first submission. 'cellspecR' is an optional companion package
+  Found the following (possibly) invalid URLs:
+    URL: https://doi.org/10.5281/zenodo.24426406
+      From: README.md
+      Status: 404
+
+  This is a first submission. The DOI in the README badge is reserved at
+  Zenodo for this version and resolves once the release record is published.
+  'cellspecR' is an optional companion package
   from the same group, available from the declared
   `Additional_repositories`. It is only used conditionally
   (`requireNamespace()` in `bs_as_cellspec()` and the vignette,
