@@ -29,7 +29,9 @@ path and an output staging directory. It must write result.json with
 schema_version 1, status 'complete', and a nonempty \code{artifacts} array of relative
 file paths. A subprocess is isolated and cleaned up after completion or timeout.
 Workers must keep helpers attached to their ancestry and join them before
-successful exit. Intentionally detached processes are unsupported. Logs are
+successful exit. Intentionally detached processes are unsupported. On Windows,
+a helper left behind by a worker that has exited is found only through the
+worker's inherited environment, so it must also keep that environment. Logs are
 limited to 10 MiB per stream. This is not an OS security sandbox.
 No worker is installed or started by this constructor.
 }

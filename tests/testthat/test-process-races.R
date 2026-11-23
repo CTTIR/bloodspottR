@@ -118,3 +118,111 @@ test_that("a parent that has exited is reported instead of matched by PID", {
   rm(p); invisible(gc())
   expect_error(.bs_process_children(handle), class = "no_such_process")
 })
+
+# Run `code` (lines of R) as a worker through .bs_run_process() while counting
+# process listings (ps_pids) and parent lookups (ps_ppid). A listing counts as
+# "during" the run if the worker has not yet written `flag`, its last action.
+count_listings <- function(code, timeout = 10) {
+  dir <- tempfile("bloodspottr-count-")
+  dir.create(dir)
+  on.exit(unlink(dir, recursive = TRUE), add = TRUE)
+  flag <- file.path(dir, "finished")
+  script <- file.path(dir, "worker.R")
+  writeLines(c("a <- commandArgs(TRUE)", code, "file.create(a[1])"), script)
+  log <- list(during = logical(), ppid = 0L)
+  pids <- ps::ps_pids
+  ppid <- ps::ps_ppid
+  local_mocked_bindings(
+    ps_pids = function() {
+      log$during <<- c(log$during, !file.exists(flag))
+      pids()
+    },
+    ps_ppid = function(p = ps::ps_handle()) {
+      log$ppid <<- log$ppid + 1L
+      ppid(p)
+    }, .package = "ps")
+  result <- .bs_run_process(rscript(), c(script, flag), timeout)
+  c(list(result = result), log)
+}
+
+test_that("the poll loop lists no processes while the worker runs", {
+  skip_if_not_installed("processx"); skip_if_not_installed("ps")
+  skip_if_not(ps::ps_is_supported())
+  skip_if(.bs_watch_mode() == "scan", "descendants are observed by listing processes here")
+  run <- count_listings("Sys.sleep(1)")
+  expect_identical(run$result$status, 0L)
+  expect_false(any(run$during))
+  # The one listing is the environment-marker sweep after the worker exited.
+  expect_identical(length(run$during), 1L)
+})
+
+test_that("without observation a finished worker costs one listing and no parent lookups", {
+  skip_if_not_installed("processx"); skip_if_not_installed("ps")
+  skip_if_not(ps::ps_is_supported())
+  # The Windows mode: each parent lookup there is a snapshot of all processes.
+  local_mocked_bindings(.bs_watch_mode = function() "none")
+  run <- count_listings("Sys.sleep(0.5)")
+  expect_identical(run$result$status, 0L)
+  expect_false(any(run$during))
+  expect_identical(length(run$during), 1L)
+  expect_identical(run$ppid, 0L)
+})
+
+test_that("without observation a helper left by the worker is still stopped", {
+  skip_if_not_installed("processx"); skip_if_not_installed("ps")
+  skip_if_not(ps::ps_is_supported()); skip_on_os(c("windows", "mac"))
+  sleeper <- Sys.which("sleep"); skip_if(!nzchar(sleeper))
+  local_mocked_bindings(.bs_watch_mode = function() "none")
+  for (timeout in c(10, 2)) {
+    dir <- tempfile("bloodspottr-helper-")
+    dir.create(dir)
+    identity_file <- file.path(dir, "child.rds")
+    script <- file.path(dir, "worker.R")
+    writeLines(c('a <- commandArgs(TRUE)',
+      'child <- processx::process$new(Sys.which("sleep"), "30", cleanup = FALSE, cleanup_tree = FALSE)',
+      'saveRDS(list(pid = child$get_pid(), time = ps::ps_create_time(child$as_ps_handle())), a[1])',
+      # A finished worker leaves the helper behind; a slow one times out.
+      if (timeout < 5) "Sys.sleep(30)" else "Sys.sleep(0.5)"), script)
+    result <- .bs_run_process(rscript(), c(script, identity_file), timeout)
+    identity <- readRDS(identity_file)
+    handle <- ps::ps_handle(identity$pid, time = identity$time)
+    running <- ps::ps_is_running(handle) && ps::ps_status(handle) != "zombie"
+    if (running) ps::ps_kill(handle)
+    expect_false(running)
+    expect_identical(result$timeout, timeout < 5)
+    unlink(dir, recursive = TRUE)
+  }
+})
+
+test_that("Linux task lists find descendants at every depth, parents first", {
+  skip_if_not_installed("processx"); skip_if_not_installed("ps")
+  skip_if_not(ps::ps_is_supported()); skip_on_cran()
+  skip_if(.bs_watch_mode() != "children", "no /proc task children lists here")
+  tree <- process_tree(children = 2L, grandchildren = 1L)
+  on.exit(drop_tree(tree), add = TRUE)
+  expect_length(tree$pids, 4L)
+  root <- tree$root$as_ps_handle()
+  parents <- vapply(tree$pids, function(pid) ps::ps_ppid(ps::ps_handle(pid)), 1L)
+  children <- tree$pids[parents == tree$root$get_pid()]
+  listed <- 0L
+  pids <- ps::ps_pids
+  local_mocked_bindings(ps_pids = function() {
+    listed <<- listed + 1L
+    pids()
+  }, .package = "ps")
+  found <- vapply(.bs_linux_descendants(root), ps::ps_pid, 1L)
+  expect_setequal(found, tree$pids)
+  expect_setequal(found[1:2], children)
+  expect_identical(listed, 0L)
+  expect_setequal(vapply(.bs_process_children(root), ps::ps_pid, 1L), found)
+})
+
+test_that("Linux task lists of a finished worker are empty", {
+  skip_if_not_installed("processx"); skip_if_not_installed("ps")
+  skip_if_not(ps::ps_is_supported())
+  skip_if(.bs_watch_mode() != "children", "no /proc task children lists here")
+  p <- processx::process$new(rscript(), c("-e", "invisible(0)"))
+  handle <- p$as_ps_handle()
+  p$wait(10000)
+  expect_identical(.bs_linux_descendants(handle), list())
+})

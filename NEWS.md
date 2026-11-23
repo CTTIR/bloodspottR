@@ -22,14 +22,19 @@
 * `CITATION.cff` names the author as "R. Heller", as in DESCRIPTION.
 * Deploy the pkgdown site with GitHub Pages from a new workflow.
 
-* Watching a worker's descendants no longer asks every process on the machine
-  for its parent. Only processes started no earlier than the worker are
-  inspected, so `bs_run_backend()`, `bs_train()`, `bs_analyze()` and native
-  slide reads stay fast on Windows, where each parent lookup takes a snapshot
-  of all processes and one short worker run cost about 15 seconds of system
-  time on a busy machine. A child that exits during the scan is skipped on its
-  own instead of emptying the scan, observed process identities are kept, and
-  a failure to list processes still stops the run.
+* `bs_run_backend()`, `bs_train()`, `bs_analyze()` and native slide reads
+  follow a running worker through its own process handle instead of listing
+  the processes of the machine at every poll, which cost a short worker run
+  15-20 seconds of system time on a busy Windows machine. Polls start at 50 ms
+  and back off to 0.5 s; the worker's exit is still noticed at once. While the
+  worker runs, its descendants are followed through the kernel's child lists on
+  Linux, by a process scan on macOS (whose protected system programs hide their
+  environment) and not at all on Windows. At clean-up a worker that is still
+  running is scanned once for descendants before it is stopped, one sweep for
+  the worker's environment marker finds helpers left behind, and every stopped
+  process is verified. A descendant scan asks only processes started no
+  earlier than the worker for their parent; a child that exits during the scan
+  is skipped on its own, and a failure to list processes still stops the run.
 
 * Track and verify observed worker descendants during timeout, failure and
   successful completion; isolate output streams from inherited pipes and bound
