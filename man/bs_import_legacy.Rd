@@ -4,12 +4,14 @@
 \alias{bs_import_legacy}
 \title{Import preserved result tables without changing source files}
 \usage{
-bs_import_legacy(path, profile = "p079")
+bs_import_legacy(path, profile = "legacy_areas")
 }
 \arguments{
 \item{path}{File or directory containing results.}
 
-\item{profile}{Adapter profile, \code{"p079"} or \code{"canonical"}.}
+\item{profile}{Adapter profile, \code{"legacy_areas"} (default) or
+\code{"canonical"}, which requires the canonical column names. \code{"p079"} is a
+deprecated alias of \code{"legacy_areas"}.}
 }
 \value{
 A \code{bs_result} object with canonical slide measurements, source SHA-256
@@ -20,8 +22,10 @@ authenticity guarantee.
 Reads a canonical CSV, the legacy physical-slide \code{slides.csv}, or saved
 \code{analysis.json} containing a \code{rows} table, or exported \code{results.json}.
 A folder must contain exactly one
-of these named files. The \code{p079} profile maps legacy area column names; it
-does not impose study-specific groups or thresholds. Saved QC/group metadata
+of these named files. The default \code{legacy_areas} profile maps the legacy
+area columns \code{tissue_mm2} and \code{red_mm2} to \code{tissue_area_mm2} and
+\code{red_area_mm2} when the canonical names are absent; it does not impose
+study-specific groups or thresholds. Saved QC/group metadata
 are preserved rather than inferred from signal. CSV identifiers are read as
 strings, including numeric-looking identifiers with leading zeros. Unreadable
 CSV or JSON files and JSON without a result object fail with a

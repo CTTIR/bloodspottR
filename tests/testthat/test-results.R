@@ -132,3 +132,46 @@ test_that("extreme finite inputs never produce infinite output metrics", {
   x <- result_fixture(); x$tissue_area_mm2[1] <- 1e-320; x$red_area_mm2[1] <- 0
   expect_error(bs_compare(list(a = x, b = x)), "Derived rates")
 })
+
+legacy_area_fixture <- function(dir) {
+  x <- result_fixture()
+  names(x)[names(x) == "tissue_area_mm2"] <- "tissue_mm2"
+  names(x)[names(x) == "red_area_mm2"] <- "red_mm2"
+  p <- file.path(dir, "slides.csv")
+  utils::write.csv(x, p, row.names = FALSE)
+  list(path = p, data = x)
+}
+
+test_that("the default import profile is legacy_areas and maps legacy area columns", {
+  expect_identical(formals(bs_import_legacy)$profile, "legacy_areas")
+  dir <- tempfile(); dir.create(dir); on.exit(unlink(dir, recursive = TRUE))
+  f <- legacy_area_fixture(dir)
+  z <- bs_import_legacy(f$path)
+  expect_identical(z$profile, "legacy_areas")
+  expect_equal(z$slides$tissue_area_mm2, f$data$tissue_mm2)
+  expect_equal(z$slides$red_area_mm2, f$data$red_mm2)
+  expect_identical(bs_import_legacy(f$path, "legacy_areas"), z)
+  # Partial matching of choices is unchanged.
+  expect_identical(bs_import_legacy(f$path, "legacy"), z)
+  expect_error(bs_import_legacy(f$path, "canonical"), "columns")
+})
+
+test_that("profile p079 is a deprecated alias of legacy_areas with identical results", {
+  dir <- tempfile(); dir.create(dir); on.exit(unlink(dir, recursive = TRUE))
+  f <- legacy_area_fixture(dir)
+  current <- bs_import_legacy(f$path)
+  lifecycle::expect_deprecated(old <- bs_import_legacy(f$path, profile = "p079"),
+                               "legacy_areas")
+  expect_identical(old, current)
+  lifecycle::expect_deprecated(partial <- bs_import_legacy(f$path, profile = "p0"))
+  expect_identical(partial, current)
+  out <- file.path(dir, "export")
+  bs_export_results(bs_example(), out)
+  lifecycle::expect_deprecated(exported <- bs_import_legacy(out, profile = "p079"))
+  expect_identical(exported, bs_import_legacy(out))
+  # Error messages list only the current profile names.
+  err <- expect_error(bs_import_legacy(f$path, profile = "study"),
+                      "profile should be one of", class = "bloodspottr_error")
+  expect_match(conditionMessage(err), "legacy_areas", fixed = TRUE)
+  expect_no_match(conditionMessage(err), "p079", fixed = TRUE)
+})

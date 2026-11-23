@@ -99,7 +99,8 @@ and exclusion decisions are not imposed by this package.
 ## Import a preserved measurement table
 
 The legacy importer accepts a canonical CSV or a saved `analysis.json` with a
-`rows` table. The `p079` profile also maps `tissue_mm2` and `red_mm2`; it does not
+`rows` table. The default `legacy_areas` profile also maps the legacy area columns
+`tissue_mm2` and `red_mm2` to `tissue_area_mm2` and `red_area_mm2`; it does not
 assign controls or invent missing calibration. Source file identity is hashed.
 
 ```{r import}

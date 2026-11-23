@@ -1,5 +1,6 @@
 # bloodspottR 0.2.0
 
+* The default import profile of `bs_import_legacy()` is now called `"legacy_areas"`, after what it does: it maps the legacy area columns `tissue_mm2` and `red_mm2` to `tissue_area_mm2` and `red_area_mm2`. The former name `"p079"` still works as a deprecated alias with identical results and signals a deprecation through 'lifecycle', which is now imported.
 * The Overview plot of `bs_app()` uses the color-vision-deficiency-safe Okabe-Ito colors together with symbols, titles its legend with `group_label`, places the legend above the plot instead of over the points, starts both axes at zero and draws text at the size of the surrounding page. In a narrow window with many groups the legend text shrinks and surplus entries are summarized as "+ n more", so the plot always draws.
 * `bs_report()` shows non-integer values in its HTML tables with six significant digits and whole counts in full; the CSV and JSON files are unchanged. The Slides table of `bs_app()` shows whole counts without decimals.
 * Add a package help topic (`?bloodspottR`), group the reference index of the documentation site by task, and link the README tutorials to the rendered articles.

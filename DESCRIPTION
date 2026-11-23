@@ -15,7 +15,7 @@ Copyright: See file inst/COPYRIGHTS for the bundled 'OpenSeadragon'
 Encoding: UTF-8
 Language: en-US
 Depends: R (>= 4.2.0)
-Imports: cli, digest, jsonlite, rlang
+Imports: cli, digest, jsonlite, lifecycle, rlang
 Suggests: testthat (>= 3.1.7), sf, spatstat.geom, shiny, processx, ps,
  openxlsx2, cellspecR, knitr, rmarkdown, covr
 Additional_repositories: https://cttir.r-universe.dev

@@ -96,14 +96,18 @@ bs_validate <- function(x, level = "structure") {
 #' Reads a canonical CSV, the legacy physical-slide `slides.csv`, or saved
 #' `analysis.json` containing a `rows` table, or exported `results.json`.
 #' A folder must contain exactly one
-#' of these named files. The `p079` profile maps legacy area column names; it
-#' does not impose study-specific groups or thresholds. Saved QC/group metadata
+#' of these named files. The default `legacy_areas` profile maps the legacy
+#' area columns `tissue_mm2` and `red_mm2` to `tissue_area_mm2` and
+#' `red_area_mm2` when the canonical names are absent; it does not impose
+#' study-specific groups or thresholds. Saved QC/group metadata
 #' are preserved rather than inferred from signal. CSV identifiers are read as
 #' strings, including numeric-looking identifiers with leading zeros. Unreadable
 #' CSV or JSON files and JSON without a result object fail with a
 #' `bloodspottr_error` condition.
 #' @param path File or directory containing results.
-#' @param profile Adapter profile, `"p079"` or `"canonical"`.
+#' @param profile Adapter profile, `"legacy_areas"` (default) or
+#'   `"canonical"`, which requires the canonical column names. `"p079"` is a
+#'   deprecated alias of `"legacy_areas"`.
 #' @return A `bs_result` object with canonical slide measurements, source SHA-256
 #'   identity, and available saved metadata. SHA-256 is an integrity receipt, not an
 #'   authenticity guarantee.
@@ -115,9 +119,17 @@ bs_validate <- function(x, level = "structure") {
 #' nrow(restored$slides)
 #' unlink(out, recursive = TRUE)
 #' @export
-bs_import_legacy <- function(path, profile = "p079") {
+bs_import_legacy <- function(path, profile = "legacy_areas") {
   .bs_scalar_string(path, "path")
-  profile <- .bs_match_arg(profile, c("p079", "canonical"), "profile")
+  # "p079" (and its partial matches) is the former name of the default
+  # profile; it is kept as a deprecated alias of "legacy_areas".
+  if (is.character(profile) && length(profile) == 1L && !is.na(profile) &&
+      nzchar(profile) && startsWith("p079", profile)) {
+    lifecycle::deprecate_soft("0.2.0", I('`bs_import_legacy(profile = "p079")`'),
+                              I('`bs_import_legacy(profile = "legacy_areas")`'))
+    profile <- "legacy_areas"
+  }
+  profile <- .bs_match_arg(profile, c("legacy_areas", "canonical"), "profile")
   if (dir.exists(path)) {
     # Match actual names so exported Slides.csv is distinct from legacy slides.csv.
     candidates <- file.path(path, intersect(list.files(path),
@@ -144,7 +156,7 @@ bs_import_legacy <- function(path, profile = "p079") {
       .bs_abort("Result CSV could not be read: ", conditionMessage(e), call. = FALSE))
   } else .bs_abort("Only CSV or JSON results are supported", call. = FALSE)
   if (anyDuplicated(names(d))) .bs_abort("Duplicate column names", call. = FALSE)
-  if (profile == "p079") {
+  if (profile == "legacy_areas") {
     for (pair in list(c("tissue_area_mm2", "tissue_mm2"), c("red_area_mm2", "red_mm2"))) {
       if (!pair[1] %in% names(d) && pair[2] %in% names(d)) d[[pair[1]]] <- d[[pair[2]]]
     }
