@@ -10,17 +10,64 @@ development:
   mode: auto
 destination: site
 reference:
-  - title: Projects, analysis and results
+  - title: Results and projects
+    desc: Import, validate, pool and compare physical-slide measurements.
     contents:
-      - starts_with("bs_")
+      - bs_import_legacy
+      - bs_validate
+      - bs_summarize
+      - bs_compare
+      - bs_project
+      - bs_status
+  - title: Delivery and reporting
+    desc: Write immutable table bundles and a self-contained HTML report.
+    contents:
+      - bs_export_results
+      - bs_report
   - title: Measurement primitives
+    desc: Calibrated burden from pixel and object counts, pooled over disjoint areas.
     contents:
-      - aggregate_burden
-      - aggregate_event_burden
-      - cell_pattern
       - measure_burden
+      - aggregate_burden
       - measure_event_burden
+      - aggregate_event_burden
+  - title: Color and profile shape
+    desc: Relative optical-density features and calibrated profile diameters.
+    contents:
+      - bs_color_features
+      - bs_profile_extent
+  - title: Spatial geometry
+    desc: Tissue observation windows and cell point patterns (optional sf and spatstat.geom).
+    contents:
       - tissue_window
+      - cell_pattern
+  - title: Review records
+    desc: Bounded review queues and receipts for saved annotation exports.
+    contents:
+      - bs_review_plan
+      - bs_review_confirm
+  - title: External workers
+    desc: Versioned requests to an explicitly trusted analysis executable.
+    contents:
+      - bs_backend
+      - bs_run_backend
+      - bs_train
+      - bs_analyze
+  - title: Shiny application and example data
+    desc: Local results explorer, slide viewer and synthetic demonstration data.
+    contents:
+      - bs_app
+      - bs_viewer_example
+      - bs_example
+  - title: Suite interoperability
+    desc: Exchange with cellspecR and a metadata inventory of a local CTTIR source suite.
+    contents:
+      - bs_as_cellspec
+      - bs_cttir_inventory
+  - title: Package
+    desc: Package overview.
+    contents:
+      - bloodspottR-package
 articles:
   - title: Guides
     navbar: ~
