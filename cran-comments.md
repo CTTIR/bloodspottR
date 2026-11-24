@@ -1,3 +1,10 @@
+## README URL correction (24 November 2026)
+
+The reserved Zenodo DOI is now shown as plain text, without a DOI link or
+badge. R's URL extraction confirms that the README no longer exposes the
+unpublished DOI as a URL. The DOI-related findings below describe earlier
+checks, before this correction; the reservation has not been published.
+
 ## Submission
 
 This is a new submission.

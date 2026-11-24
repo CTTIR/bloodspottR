@@ -3,7 +3,9 @@
 [![R-CMD-check](https://github.com/CTTIR/bloodspottR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/CTTIR/bloodspottR/actions/workflows/R-CMD-check.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/CTTIR/bloodspottR/blob/main/LICENSE.md)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24426406.svg)](https://doi.org/10.5281/zenodo.24426406)
+
+Zenodo DOI reserved for the release: `10.5281/zenodo.24426406` (not yet published).
+
 
 **Calibrated histology measurements, traceable review and transparent reporting.**
 
